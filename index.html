@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>交易心理自测 — 你的交易人格是什么？</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; background: #0a0a0f; color: #e5e5e5; min-height: 100vh; padding: 20px; }
+.container { max-width: 680px; margin: 0 auto; }
+h1 { text-align: center; font-size: 1.8em; margin-bottom: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.subtitle { text-align: center; color: #888; margin-bottom: 30px; font-size: 0.95em; }
+.card { background: #12121a; border: 1px solid #1e1e2e; border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+.question { font-size: 1.05em; margin-bottom: 16px; line-height: 1.6; }
+.options { display: flex; flex-direction: column; gap: 10px; }
+.option { display: flex; align-items: center; padding: 12px 16px; background: #1a1a26; border: 1px solid #2a2a3e; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+.option:hover { background: #22223a; border-color: #667eea; }
+.option input[type="radio"] { margin-right: 12px; accent-color: #667eea; width: 18px; height: 18px; }
+.option-text { font-size: 0.95em; }
+.progress-bar { width: 100%; height: 6px; background: #1a1a26; border-radius: 3px; margin-bottom: 20px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 3px; transition: width 0.4s ease; width: 0%; }
+.btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-size: 1.1em; font-weight: 600; cursor: pointer; transition: transform 0.2s; margin-top: 20px; }
+.btn:hover { transform: translateY(-2px); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.result-card { text-align: center; padding: 30px; }
+.result-emoji { font-size: 4em; margin-bottom: 10px; }
+.result-title { font-size: 1.5em; font-weight: 700; margin-bottom: 20px; }
+.score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+.score-item { background: #1a1a26; border-radius: 10px; padding: 14px; text-align: left; }
+.score-label { font-size: 0.85em; color: #888; margin-bottom: 6px; }
+.score-bar { width: 100%; height: 8px; background: #2a2a3e; border-radius: 4px; overflow: hidden; margin-top: 4px; }
+.score-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+.score-value { font-weight: 700; font-size: 1.1em; }
+.advice { background: #1a1a26; border-left: 3px solid #667eea; border-radius: 0 10px 10px 0; padding: 16px; margin: 16px 0; text-align: left; }
+.advice h3 { color: #667eea; margin-bottom: 8px; font-size: 1em; }
+.advice p { font-size: 0.9em; line-height: 1.6; color: #ccc; }
+.share-btn { display: inline-block; padding: 12px 28px; background: #1a1a26; border: 1px solid #667eea; color: #667eea; border-radius: 10px; cursor: pointer; font-size: 0.95em; margin-top: 16px; text-decoration: none; }
+.share-btn:hover { background: #667eea; color: white; }
+.hidden { display: none; }
+.footer { text-align: center; color: #555; font-size: 0.8em; margin-top: 30px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🧠 交易心理自测</h1>
+  <p class="subtitle">15 题 · 3 分钟 · 发现你的交易人格</p>
+
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+  <div class="card" id="quiz-card">
+    <div class="question" id="question-text"></div>
+    <div class="options" id="options"></div>
+    <button class="btn hidden" id="next-btn" onclick="nextQuestion()">下一题</button>
+  </div>
+
+  <div class="card result-card hidden" id="result-card">
+    <div class="result-emoji" id="result-emoji"></div>
+    <div class="result-title" id="result-title"></div>
+    <div class="score-grid" id="score-grid"></div>
+    <div id="result-advice"></div>
+    <a class="share-btn" id="share-btn" onclick="shareResult()">📤 分享我的结果</a>
+    <br><br>
+    <p style="color:#666;font-size:0.85em;">📖 想系统训练交易心理？<br><a href="#" style="color:#667eea;">查看《交易者的内在游戏》电子书 →</a></p>
+  </div>
+
+  <p class="footer">本测试仅供自我认知参考，不构成投资建议</p>
+</div>
+
+<script>
+const questions = [
+  { dim: "lossAversion", text: "1. 你持有一只股票亏损 15%，基本面没变，市场整体在跌。你会：", options: ["立即止损，接受亏损", "再给一点时间，但设硬止损", "持有不动，等回本再说", "亏到 20% 就补仓摊低成本", "不止损，死扛到底"] },
+  { dim: "lossAversion", text: "2. 你设置了止损位，价格快触及了，你觉得「再等等可能反弹」。你通常：", options: ["严格执行，到了就卖", "90% 情况执行，偶尔犹豫", "手动把止损位往下挪一点", "经常取消止损单", "从不设止损，靠感觉"] },
+  { dim: "lossAversion", text: "3. 一笔交易从盈利 10% 回吐到亏损 5%，你的第一反应是：", options: ["平仓走人，至少不亏", "设保本止损，让剩下的跑", "有点懊恼但能接受", "很不舒服，觉得本可以赚到", "极度懊恼，加仓试图夺回利润"] },
+  { dim: "overconfidence", text: "4. 你对自己交易判断的准确率估计是：", options: ["低于 50%，我大部分时候是错的", "大约 50%，对一半错一半", "60-70%，比平均水平好", "80% 以上，我做了充分研究", "90%+，我的分析很少出错"] },
+  { dim: "overconfidence", text: "5. 你平均每天的交易频率是：", options: ["一周不到一笔", "一天一笔左右", "一天 2-3 笔", "一天 5 笔以上", "随时在交易，一天十几笔"] },
+  { dim: "overconfidence", text: "6. 做一笔交易前，你会做多少研究？", options: ["详细研究基本面+技术面+仓位规划", "看几个指标+新闻，有大致方向", "凭经验和盘感，偶尔看图表", "看到异动就冲，事后才研究", "凭直觉，感觉对了就干"] },
+  { dim: "revenge", text: "7. 一笔交易亏钱后，接下来 1 小时内你通常：", options: ["关掉屏幕，休息一下", "复盘错误，但不开新仓", "正常交易，但更谨慎", "开新交易试图赚回来", "加倍下注，一定要翻本"] },
+  { dim: "revenge", text: "8. 你有过「连亏后加大仓位一把翻本」的经历吗？", options: ["从来没有", "极少，一年可能一次", "偶尔，亏多了有冲动", "有过几次，而且亏得更大", "经常，这是我的策略"] },
+  { dim: "revenge", text: "9. 连续 3 天亏损时，你的心态是：", options: ["暂停交易，检查系统", "降低仓位，慢慢找感觉", "正常操作，接受概率", "焦虑，觉得运气该回来了", "急躁，开始做冒险交易"] },
+  { dim: "fomo", text: "10. 看到一只股票一天涨了 20%，你没持有，你会：", options: ["无所谓，错过了就错过", "有点关注但不追", "研究为什么涨，看下次机会", "后悔没买，第二天追进去", "立即买入，不管价格多高"] },
+  { dim: "fomo", text: "11. 空仓时看到大盘暴涨，你的感受是：", options: ["平静，钱是赚不完的", "略痒但能忍住", "不舒服，觉得踏空了", "很焦虑，怕错过行情", "无法忍受，必须马上进场"] },
+  { dim: "fomo", text: "12. 你加入过「内部消息群」「牛股推荐群」吗？", options: ["从不，只信自己", "看过但没跟过", "偶尔参考别人推荐", "经常跟群里的消息操作", "主要跟着大 V 操作"] },
+  { dim: "discipline", text: "13. 你制定了交易计划（入场/止损/目标），实际执行时：", options: ["几乎 100% 按计划", "大部分执行，偶尔微调", "计划是计划，盘中常变", "经常临时改止损或加仓", "基本不按计划，全靠临场"] },
+  { dim: "discipline", text: "14. 你有交易日志，记录每笔交易的决策和情绪吗？", options: ["每天记录，定期复盘", "有日志但不完整", "偶尔写，心情好才记", "想起来才记一笔", "从不记录"] },
+  { dim: "discipline", text: "15. 你有固定仓位管理规则（如单笔不超 2%）吗？", options: ["有严格规则，从不违反", "有规则，偶尔超一点", "有大致原则，但常凭感觉", "没有固定规则，看心情", "满仓干，没有仓位概念"] }
+];
+
+const dimensions = {
+  lossAversion: { name: "损失厌恶", color: "#ef4444" },
+  overconfidence: { name: "过度自信", color: "#f59e0b" },
+  revenge: { name: "报复交易", color: "#ec4899" },
+  fomo: { name: "FOMO 焦虑", color: "#8b5cf6" },
+  discipline: { name: "纪律执行", color: "#10b981" }
+};
+
+const profiles = [
+  { id: "gambler", emoji: "🎰", name: "赌徒型", cond: (s) => s.revenge >= 10 && s.discipline <= 7 && s.overconfidence >= 10, desc: "亏损后加倍下注，把市场当赌场。你需要的是风控系统，不是更多分析。" },
+  { id: "chaser", emoji: "😰", name: "焦虑型追涨者", cond: (s) => s.fomo >= 10 && s.lossAversion >= 10 && s.discipline <= 7, desc: "涨了怕错过追进去被套，跌了死扛不止损。两头挨打不是技术问题，是心理结构问题。" },
+  { id: "thinker", emoji: "🦉", name: "思考者", cond: (s) => s.discipline >= 10 && s.overconfidence <= 7 && s.lossAversion <= 9, desc: "有计划、有耐心、接受亏损是成本。你已经是少数赢家之一。" },
+  { id: "hesitator", emoji: "🐌", name: "犹豫型", cond: (s) => s.lossAversion >= 10 && s.fomo >= 10 && s.discipline >= 8 && s.discipline <= 12, desc: "买也怕卖也怕，最后往往追高被套。你需要的是简化决策框架。" },
+  { id: "hunter", emoji: "🦅", name: "猎手型", cond: (s) => s.discipline >= 10 && s.fomo <= 7 && s.overconfidence >= 7 && s.overconfidence <= 11, desc: "等待、出击、撤退，像猎豹一样。保持你的纪律，这是你的护城河。" }
+];
+
+let currentQ = 0;
+let answers = [];
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  document.getElementById("question-text").textContent = q.text;
+  const opts = document.getElementById("options");
+  opts.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const label = document.createElement("label");
+    label.className = "option";
+    label.innerHTML = `<input type="radio" name="q" value="${i+1}" onchange="enableNext()"> <span class="option-text">${opt}</span>`;
+    opts.appendChild(label);
+  });
+  document.getElementById("progress").style.width = `${((currentQ)/15)*100}%`;
+  document.getElementById("next-btn").classList.add("hidden");
+}
+
+function enableNext() { document.getElementById("next-btn").classList.remove("hidden"); }
+
+function nextQuestion() {
+  const selected = document.querySelector('input[name="q"]:checked');
+  if (!selected) return;
+  answers.push(parseInt(selected.value));
+  currentQ++;
+  if (currentQ < 15) { renderQuestion(); }
+  else { showResult(); }
+}
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("progress").style.width = "100%";
+  document.querySelector(".progress-bar").style.display = "none";
+  document.querySelector("h1").style.display = "none";
+  document.querySelector(".subtitle").style.display = "none";
+
+  const scores = { lossAversion: 0, overconfidence: 0, revenge: 0, fomo: 0, discipline: 0 };
+  questions.forEach((q, i) => { scores[q.dim] += answers[i]; });
+
+  let profile = profiles.find(p => p.cond(scores));
+  if (!profile) { profile = { emoji: "🎯", name: "混合型交易者", desc: "你的交易心理画像没有极端偏向，但仍有优化空间。建议重点关注得分最高的维度。" }; }
+
+  document.getElementById("result-emoji").textContent = profile.emoji;
+  document.getElementById("result-title").textContent = `你的交易人格：${profile.name}`;
+
+  const grid = document.getElementById("score-grid");
+  grid.innerHTML = "";
+  Object.entries(dimensions).forEach(([key, dim]) => {
+    const score = scores[key];
+    const pct = (score / 15 * 100);
+    const level = score <= 5 ? "🟢" : score <= 9 ? "🟡" : score <= 12 ? "🟠" : "🔴";
+    grid.innerHTML += `<div class="score-item"><div class="score-label">${dim.name} ${level}</div><div class="score-value" style="color:${dim.color}">${score}/15</div><div class="score-bar"><div class="score-fill" style="width:${pct}%;background:${dim.color}"></div></div></div>`;
+  });
+
+  const adviceEl = document.getElementById("result-advice");
+  adviceEl.innerHTML = `<div class="advice"><h3>💡 核心诊断</h3><p>${profile.desc}</p></div><div class="advice"><h3>🎯 3 个行动建议</h3><p>${getAdvice(scores)}</p></div><div class="advice"><h3>📖 推荐阅读</h3><p>《止损心理学》第 3 章 — 为什么你总是"再等等"<br>《交易中的情绪纪律》— 如何训练延迟满足</p></div>`;
+
+  document.getElementById("result-card").classList.remove("hidden");
+}
+
+function getAdvice(scores) {
+  const tips = [];
+  if (scores.lossAversion >= 10) tips.push("入场前就设好止损，且不可修改——写下来贴在屏幕上");
+  if (scores.fomo >= 10) tips.push("空仓时设「冷静期」：想买之前强制等待 30 分钟");
+  if (scores.revenge >= 10) tips.push("亏损后强制休息 24 小时再开新仓，写进你的交易规则");
+  if (scores.overconfidence >= 10) tips.push("每月统计一次胜率，用数据校准你的自信");
+  if (scores.discipline <= 7) tips.push("从今天起写交易日志，每笔记录理由+情绪+结果");
+  if (tips.length === 0) tips.push("保持你的纪律，这是你最大的优势。考虑把方法系统化分享给别人。");
+  return tips.join("<br>");
+}
+
+function shareResult() {
+  const text = `我刚做了交易心理自测，发现自己的交易人格。来测测你是哪种？`;
+  if (navigator.share) { navigator.share({ title: "交易心理自测", text }); }
+  else { navigator.clipboard.writeText(window.location.href); alert("链接已复制到剪贴板，发给朋友吧！"); }
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
