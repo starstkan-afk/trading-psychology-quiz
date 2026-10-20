@@ -1,0 +1,1793 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>超级百晓生 · 烽烟再起</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+<script src="https://fastly.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=JetBrains+Mono:wght@400;600;800&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap">
+<style>
+:root{
+  --bg:#07090F;--panel:#0D1117;--panel-2:#11161F;
+  --border:rgba(255,255,255,0.06);--border-hi:rgba(245,197,24,0.25);
+  --gold:#F5C518;--green:#00D09C;--red:#FF4D67;--blue:#4FC3F7;--orange:#FF9F43;
+  --text:#E8EAED;--dim:rgba(232,234,237,0.7);--dimmer:rgba(232,234,237,0.5);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text);font-family:"Noto Sans SC",-apple-system,sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 800px 400px at 20% -10%,rgba(245,197,24,0.06),transparent),
+             radial-gradient(ellipse 600px 300px at 90% 10%,rgba(79,195,247,0.04),transparent)}
+.mono{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums}
+.container{width:100%;margin:0 auto;padding:20px;position:relative;z-index:1}
+
+/* Ticker */
+.ticker{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:8px 16px;margin-bottom:14px;overflow:hidden;white-space:nowrap;display:flex;gap:24px;font-size:11px;font-family:"JetBrains Mono",monospace}
+.ticker span{color:var(--dim)}.ticker b{color:var(--text);font-weight:600}
+.ticker .up{color:var(--green)}.ticker .down{color:var(--red)}
+
+/* Header */
+.header{display:flex;justify-content:space-between;align-items:flex-end;padding:8px 4px 20px}
+.brand .tag{display:inline-block;font-size:10px;letter-spacing:3px;color:var(--gold);font-weight:700;margin-bottom:6px}
+.brand h1{font-size:28px;font-weight:900;letter-spacing:-0.5px;line-height:1.1}
+.brand h1 em{font-style:normal;background:linear-gradient(135deg,var(--gold),#ffd966);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.brand .sub{font-size:12px;color:var(--dim);margin-top:6px;font-family:"JetBrains Mono",monospace}
+.header-right{text-align:right}
+.btc-row{display:flex;align-items:baseline;gap:10px;justify-content:flex-end}
+.btc-price{font-size:32px;font-weight:800;font-family:"JetBrains Mono",monospace;letter-spacing:-1px}
+.btc-chg{font-size:13px;color:var(--green);font-weight:600;font-family:"JetBrains Mono",monospace}
+.risk-pill{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.3);color:var(--gold)}
+.risk-pill .pulse{width:6px;height:6px;background:var(--gold);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(245,197,24,0.5)}50%{opacity:0.5;box-shadow:0 0 0 4px rgba(245,197,24,0)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.6}}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px}
+.stat{background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--border);border-radius:12px;padding:14px;position:relative;overflow:hidden;transition:transform .2s,border-color .2s}
+.stat:hover{transform:translateY(-2px);border-color:var(--border-hi)}
+.stat-label{font-size:9px;letter-spacing:1px;color:var(--dim);margin-bottom:8px;text-transform:uppercase}
+.stat-value{font-size:22px;font-weight:800;font-family:"JetBrains Mono",monospace;letter-spacing:-0.5px;line-height:1}
+.stat-value.g{color:var(--green)}.stat-value.y{color:var(--gold)}.stat-value.b{color:var(--blue)}.stat-value.r{color:var(--red)}
+.stat-sub{font-size:9px;color:var(--dimmer);margin-top:6px;font-family:"JetBrains Mono",monospace}
+
+/* Main grid */
+.row{display:grid;gap:14px;margin-bottom:14px}
+.row.r2{grid-template-columns:1.3fr 1fr}
+.row.r3{grid-template-columns:1fr 1fr}
+.panel{background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--border);border-radius:14px;padding:18px;position:relative}
+.panel::before{content:"";position:absolute;top:0;left:20px;right:20px;height:1px;background:linear-gradient(90deg,transparent,rgba(245,197,24,0.2),transparent)}
+.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.panel-title{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
+.panel-title b{color:var(--text);font-weight:700}
+.live-badge{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--green);font-family:"JetBrains Mono",monospace}
+.live-badge .dot{width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite}
+
+/* Todo list */
+.todo{display:flex;flex-direction:column;gap:10px}
+.todo-item{background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.todo-item.trigger{border-color:rgba(245,197,24,0.3);background:linear-gradient(135deg,rgba(245,197,24,0.05),rgba(0,0,0,0.25))}
+.todo-row1{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.todo-sym{font-size:14px;font-weight:800}
+.todo-status{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600}
+.todo-status.wait{background:rgba(245,197,24,0.15);color:var(--gold)}
+.todo-status.done{background:rgba(0,208,156,0.15);color:var(--green)}
+.todo-status.watch{background:rgba(255,255,255,0.08);color:var(--dim)}
+.todo-desc{font-size:11px;color:var(--dim);line-height:1.5;margin-bottom:8px}
+.todo-desc b{color:var(--text)}
+.progress{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;position:relative;margin-bottom:4px}
+.progress-bar{height:100%;border-radius:3px;transition:width .5s}
+.progress-bar.g{background:linear-gradient(90deg,var(--green),#00d09c)}
+.progress-bar.y{background:linear-gradient(90deg,var(--gold),#ffd966)}
+.progress-label{display:flex;justify-content:space-between;font-size:9px;color:var(--dimmer);font-family:"JetBrains Mono",monospace}
+
+/* Watchlist */
+.watchlist{display:flex;flex-direction:column;gap:6px}
+.wl-item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,0.2);font-size:11px;border-left:2px solid transparent}
+.wl-item.up{border-left-color:var(--green)}
+.wl-item.down{border-left-color:var(--red)}
+.wl-item.flat{border-left-color:#555}
+.wl-sym{font-weight:700;font-family:"JetBrains Mono",monospace}
+.wl-info{color:var(--dim);font-size:10px}
+.wl-chg{font-family:"JetBrains Mono",monospace;font-weight:600}
+.wl-chg.up{color:var(--green)}.wl-chg.down{color:var(--red)}.wl-chg.flat{color:var(--dim)}
+
+/* Calculator */
+.calc{display:flex;flex-direction:column;gap:10px}
+.calc label{font-size:10px;color:var(--dim);letter-spacing:1px;text-transform:uppercase}
+.calc input{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:"JetBrains Mono",monospace;font-size:14px;outline:none}
+.calc input:focus{border-color:var(--gold)}
+.calc-result{background:rgba(0,0,0,0.3);border-radius:8px;padding:12px;font-size:11px;line-height:1.8;font-family:"JetBrains Mono",monospace}
+.calc-result b{color:var(--gold)}
+.calc-result .row{display:flex;justify-content:space-between}
+
+/* Ops */
+.ops{display:flex;flex-direction:column;gap:10px}
+.op{background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.op.hot{border-color:rgba(79,195,247,0.3);background:linear-gradient(135deg,rgba(79,195,247,0.06),rgba(0,0,0,0.3))}
+.op.wait{border-color:rgba(245,197,24,0.25)}
+.op.watch{opacity:0.7}
+.op-row1{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.op-sym{font-size:16px;font-weight:900}
+.op-sym .star{color:var(--gold)}
+.op-tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700}
+.op-tag.done{background:rgba(0,208,156,0.15);color:var(--green)}
+.op-tag.wait{background:rgba(245,197,24,0.15);color:var(--gold)}
+.op-tag.watch{background:rgba(255,255,255,0.08);color:var(--dim)}
+.op-big{font-size:24px;font-weight:800;font-family:"JetBrains Mono",monospace;letter-spacing:-1px}
+.op-big.g{color:var(--green)}.op-big.y{color:var(--gold)}.op-big.r{color:var(--red)}
+.op-desc{font-size:11px;color:var(--dim);line-height:1.5}
+.op-desc b{color:var(--text)}
+
+/* History */
+.h-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px}
+.h{background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:10px}
+.h.win{border-left:2px solid var(--green)}
+.h.loss{border-left:2px solid var(--red)}
+.h.deny{border-left:2px solid #444}
+.h.hot{border-left:2px solid var(--blue);background:linear-gradient(135deg,rgba(79,195,247,0.06),rgba(0,0,0,0.3))}
+.h.wait{border-left:2px solid var(--gold)}
+.h-date{font-size:10px;color:var(--dimmer);font-family:"JetBrains Mono",monospace}
+.h-sym{font-size:14px;font-weight:800;margin:2px 0}
+.h-ret{font-size:15px;font-weight:800;font-family:"JetBrains Mono",monospace}
+.h-ret.g{color:var(--green)}.h-ret.r{color:var(--red)}.h-ret.y{color:var(--gold)}.h-ret.d{color:var(--dimmer);font-size:11px}
+.h-note{font-size:9px;color:var(--dimmer);margin-top:3px;font-family:"JetBrains Mono",monospace}
+
+#navChart{width:100%;height:240px}
+.footer{text-align:center;padding:16px;font-size:10px;color:var(--dimmer);font-family:"JetBrains Mono",monospace}
+
+@media(max-width:900px){
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .row.r2,.row.r3{grid-template-columns:1fr}
+  .l2-grid,.l3-grid,.l4-grid{grid-template-columns:1fr !important}
+  .header{flex-direction:column;align-items:flex-start;gap:12px}
+}
+</style>
+</head>
+<body>
+<div style="display:flex;min-height:100vh">
+  <!-- 左侧边栏（固定不滚动） -->
+  <aside style="width:120px;flex-shrink:0;background:#0a0d14;border-right:1px solid var(--border);padding:20px 0;position:fixed;left:0;top:0;height:100vh;z-index:100;overflow-y:auto">
+    <div style="padding:0 20px 20px;font-weight:900;color:var(--gold);font-size:14px;letter-spacing:1px">超级百晓生</div>
+    <button onclick="showView('crypto')" id="btn-crypto" style="width:100%;padding:12px 20px;text-align:left;background:linear-gradient(135deg,var(--gold),#E0A800);color:#000;border:none;font-size:13px;font-weight:700;cursor:pointer;border-radius:0;margin-bottom:4px">加密</button>
+    <button onclick="showView('astock')" id="btn-astock" style="width:100%;padding:12px 20px;text-align:left;background:transparent;color:var(--dim);border:none;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:4px">A股</button>
+  </aside>
+  <!-- 主内容（左边距让位固定侧栏） -->
+  <div style="flex:1;min-width:0;margin-left:120px">
+
+<div class="container" id="view-crypto">
+
+  <div class="ticker">
+    <span>BTC <b id="header-btc-price">$--</b> <span class="down" id="header-btc-chg">--</span></span>
+    <span>ETH <b>$2,393</b> <span class="down">−1.18%</span></span>
+    <span>SOL <b>$—</b> <span class="flat">--</span></span>
+    <span>PHA <b>$0.0583</b> <span class="up">+14.7%</span></span>
+    <span>SAND <b>$0.0572</b> <span class="down">−4.5%</span></span>
+    <span>NEAR <b>$4.69</b> <span class="down">−6.4%</span></span>
+    <span>ARB <b>$0.188</b> <span class="down">−4.6%</span></span>
+  </div>
+
+  <div class="header">
+    <div class="brand">
+      <div class="tag">超级百晓生</div>
+      <h1>烽烟<em>·再起</em></h1>
+      <div class="sub">// 2026.10.20 · 合约价 · 涨跌对今日早8点基准</div>
+    </div>
+    <div class="header-right">
+      <div class="btc-row"><div class="btc-price" id="btc-price-main">$--</div><div class="btc-chg" id="btc-chg-main">--</div></div>
+      <div class="risk-pill" style="background:rgba(255,77,103,0.12);border-color:rgba(255,77,103,0.4);color:var(--red)"><span class="pulse" style="background:var(--red)"></span>避险 · 0–1 仓或观望（1 仓 = 10%）</div>
+    </div>
+  </div>
+
+  <!-- L1: 今日待办主视觉（整宽） -->
+  <div class="panel" id="todo" style="border-left:3px solid var(--gold);margin-bottom:14px;scroll-margin-top:20px;padding:22px" >
+    <div class="panel-head" style="margin-bottom:10px">
+      <div class="panel-title" style="font-size:13px;letter-spacing:3px">今日待办 <b style="color:var(--gold);font-size:15px">· 挂单等回踩</b></div>
+      <div class="live-badge"><span class="dot"></span>避险 · 不追高</div>
+    </div>
+    <div id="alerts" style="margin-bottom:14px;display:flex;flex-direction:column;gap:6px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+      <!-- PHA 首推 -->
+      <div style="background:linear-gradient(135deg,rgba(245,197,24,0.08),rgba(0,0,0,0.3));border:1px solid rgba(245,197,24,0.35);border-radius:12px;padding:18px;position:relative">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:18px;font-weight:900">PHA <span style="font-size:10px;background:var(--gold);color:#000;padding:2px 8px;border-radius:4px;margin-left:6px;font-weight:800">首推</span></div>
+          <div style="text-align:right">
+            <div style="font-size:26px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--gold)" id="todo-pha-big">$0.0583</div>
+            <div style="font-size:11px;color:var(--green);font-family:'JetBrains Mono',monospace" id="todo-pha-chg">+14.7% 24h</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0;font-size:11px">
+          <div><div style="color:var(--dim);font-size:9px;letter-spacing:1px">可挂低吸</div><div style="font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace;margin-top:2px">$0.050–0.053</div></div>
+          <div><div style="color:var(--dim);font-size:9px;letter-spacing:1px">突破加仓</div><div style="font-weight:700;color:var(--blue);font-family:'JetBrains Mono',monospace;margin-top:2px">$0.066</div></div>
+          <div><div style="color:var(--dim);font-size:9px;letter-spacing:1px">止损</div><div style="font-weight:700;color:var(--red);font-family:'JetBrains Mono',monospace;margin-top:2px">$0.047</div></div>
+          <div><div style="color:var(--dim);font-size:9px;letter-spacing:1px">目标</div><div style="font-weight:700;color:var(--green);font-family:'JetBrains Mono',monospace;margin-top:2px">$0.075</div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dimmer);font-family:'JetBrains Mono',monospace;padding-top:8px;border-top:1px solid var(--border)">
+          <span>预期 <b style="color:var(--green)">+47%</b> · 盈亏比 <b style="color:var(--gold)">6:1</b></span>
+          <span>仓位上限 <b style="color:var(--text)">≤8%</b></span>
+        </div>
+      </div>
+
+      <!-- SAND 次推 -->
+      <div style="background:linear-gradient(135deg,rgba(79,195,247,0.06),rgba(0,0,0,0.3));border:1px solid rgba(79,195,247,0.3);border-radius:12px;padding:18px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:18px;font-weight:900">SAND <span style="font-size:10px;background:var(--blue);color:#000;padding:2px 8px;border-radius:4px;margin-left:6px;font-weight:800">次推</span></div>
+          <div style="text-align:right">
+            <div style="font-size:26px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--blue)" id="todo-sand-big">$0.0572</div>
+            <div style="font-size:11px;color:var(--red);font-family:'JetBrains Mono',monospace" id="todo-sand-chg">−4.47% 今日回踩</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0;font-size:11px">
+          <div><div style="color:var(--dim);font-size:9px;letter-spacing:1px">可挂低吸</div><div style="font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace;margin-top:2px">$0.050–0.053</div></div>
+          <div><div style="color:var(--dim);font-size:9px;letter-spacing:1px">突破加仓</div><div style="font-weight:700;color:var(--blue);font-family:'JetBrains Mono',monospace;margin-top:2px">$0.064</div></div>
+          <div><div style="color:var(--dim);font-size:9px;letter-spacing:1px">止损</div><div style="font-weight:700;color:var(--red);font-family:'JetBrains Mono',monospace;margin-top:2px">$0.044</div></div>
+          <div><div style="color:var(--dim);font-size:9px;letter-spacing:1px">目标</div><div style="font-weight:700;color:var(--green);font-family:'JetBrains Mono',monospace;margin-top:2px">$0.074</div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dimmer);font-family:'JetBrains Mono',monospace;padding-top:8px;border-top:1px solid var(--border)">
+          <span>预期 <b style="color:var(--green)">+45%</b> · 盈亏比 <b style="color:var(--gold)">6.4:1</b></span>
+          <span>仓位上限 <b style="color:var(--text)">≤8%</b></span>
+        </div>
+      </div>
+    </div>
+  </div><!-- /L1 todo -->
+
+  <!-- 信号跑马灯（小喇叭，横贯整行） -->
+  <div id="signalBar" style="display:flex;align-items:center;gap:10px;background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.25);border-radius:8px;padding:8px 14px;margin-bottom:14px;overflow:hidden">
+    <div style="flex-shrink:0;color:var(--gold);font-size:14px">📢</div>
+    <div style="flex:1;overflow:hidden;white-space:nowrap">
+      <div id="signalMarquee" style="display:inline-block;animation:marquee 30s linear infinite;font-size:12px;color:var(--dim)">
+        <span style="color:var(--gold);font-weight:600">避险模式</span> · 每3秒检测 PHA 挂单区$0.050-0.053 / 止损$0.047 / 目标$0.075 · SAND 挂单区$0.050-0.053 · 触发即在此播报 ·&nbsp;
+      </div>
+    </div>
+  </div>
+
+  <!-- L2: 当前作战位 + 回踩候选表（两栏） -->
+  <div style="display:grid;grid-template-columns:1fr 1.3fr;gap:14px;margin-bottom:14px">
+
+  <!-- 左：当前作战位（我手里有什么） -->
+  <div class="panel" id="positions" style="scroll-margin-top:20px">
+    <div class="panel-head"><div class="panel-title">当前作战位 <b style="color:var(--gold)">· 在仓/候补</b></div></div>
+    <div class="ops">
+      <div class="op hot">
+        <div class="op-row1"><div class="op-sym">Q <span class="star">★</span></div><div class="op-tag done">已关闭</div></div>
+        <div class="op-big g">+53.2%</div>
+        <div class="op-desc">最高 $0.21 · 止损 $0.098 未触发 · <b>本笔落袋</b></div>
+      </div>
+      <div class="op wait">
+        <div class="op-row1"><div class="op-sym">GTC</div><div class="op-tag wait">候补</div></div>
+        <div class="op-big y" id="op-gtc-big">$0.311</div>
+        <div class="op-desc">等回踩 <b>$0.26–0.28</b> · 止损 $0.23 · 目标 $0.45</div>
+      </div>
+      <div class="op watch">
+        <div class="op-row1"><div class="op-sym">FIL</div><div class="op-tag watch">破位观察</div></div>
+        <div class="op-big r" id="op-fil-big">$1.036</div>
+        <div class="op-desc">破止损 $1.00 · <b>不追加</b> · 站回 $1.10 再看</div>
+      </div>
+    </div>
+    <!-- 观察池小条（从原右栏搬来，紧凑） -->
+    <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+      <div style="font-size:10px;color:var(--dim);letter-spacing:1px;margin-bottom:8px">观察池 <b style="color:var(--text)">· 按涨幅排序</b></div>
+      <div class="watchlist" id="watchlist-body" style="max-height:480px;overflow-y:auto;padding-right:4px">
+        <div style="text-align:center;padding:8px;color:var(--dim);font-size:11px">扫描中…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右：回踩候选表 -->
+  <div class="panel">
+    <div style="padding:6px 4px">
+      <h2 style="font-size:18px;font-weight:900;color:var(--gold);margin-bottom:6px" id="daily-title">今日强势 · 等回踩买入</h2>
+      <div style="font-size:12px;color:var(--dim);line-height:1.6;margin-bottom:12px" id="daily-summary">加载中…</div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;overflow-x:auto" id="daily-cards"></div>
+      <div style="overflow-x:auto;max-height:320px;overflow-y:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="border-bottom:2px solid var(--border);position:sticky;top:0;background:var(--panel);z-index:1">
+            <th style="text-align:left;padding:6px 8px;color:var(--gold)">币种</th>
+            <th style="text-align:right;padding:6px 8px;color:var(--gold)">现价</th>
+            <th style="text-align:right;padding:6px 8px;color:var(--gold)">24h</th>
+            <th style="text-align:right;padding:6px 8px;color:var(--gold)">挂单区</th>
+            <th style="text-align:right;padding:6px 8px;color:var(--gold)">止损/目标</th>
+            <th style="text-align:right;padding:6px 8px;color:var(--gold)">判定</th>
+          </tr></thead>
+          <tbody id="daily-table"></tbody>
+        </table>
+      </div>
+
+      <!-- 每日首推回顾 -->
+      <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:13px;font-weight:700;color:var(--gold)">每日首推回顾</div>
+          <div style="font-size:10px;color:var(--dim)">自动记录 · 从推荐价算涨跌</div>
+        </div>
+        <div style="overflow-x:auto;max-height:400px;overflow-y:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:11px">
+            <thead><tr style="border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel);z-index:1">
+              <th style="text-align:left;padding:6px 8px;color:var(--dim)">日期</th>
+              <th style="text-align:left;padding:6px 8px;color:var(--dim)">币种</th>
+              <th style="text-align:right;padding:6px 8px;color:var(--dim)">入场区间</th>
+              <th style="text-align:right;padding:6px 8px;color:var(--dim)">止损</th>
+              <th style="text-align:right;padding:6px 8px;color:var(--dim)">止盈</th>
+              <th style="text-align:right;padding:6px 8px;color:var(--dim)">实际收益</th>
+              <th style="text-align:right;padding:6px 8px;color:var(--dim)">状态</th>
+            </tr></thead>
+            <tbody id="history-table"><tr><td colspan="6" style="padding:12px;text-align:center;color:var(--dim)">暂无历史记录</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /L2 -->
+
+
+  <!-- L3: 紧凑信息条（大盘/主力/异动 一行弱化） -->
+  <div class="l3-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+    <!-- 大盘环境（紧凑） -->
+    <div class="panel" id="market" style="scroll-margin-top:20px;padding:12px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--dim);margin-bottom:8px">大盘环境</div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div style="text-align:center">
+          <div style="font-size:9px;color:var(--dim)">恐惧贪婪</div>
+          <div style="font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--gold)" id="fng-val">--</div>
+          <div style="font-size:9px" id="fng-label">--</div>
+        </div>
+        <div style="flex:1;font-size:10px;line-height:1.6;color:var(--dim);border-left:1px solid var(--border);padding-left:12px">
+          BTC主导 <b style="color:var(--text);font-family:'JetBrains Mono',monospace" id="btc-dom">--</b><br>
+          ETH/BTC <b style="color:var(--text);font-family:'JetBrains Mono',monospace" id="eth-btc">--</b>
+          <div id="market-brief" style="color:var(--dimmer);margin-top:4px;font-size:10px;display:none"></div>
+        </div>
+      </div>
+    </div>
+    <!-- 主力监控（紧凑） -->
+    <div class="panel" id="whale" style="padding:12px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--dim);margin-bottom:8px">主力监控</div>
+      <div style="font-size:10px;line-height:1.8;color:var(--dim);font-family:'JetBrains Mono',monospace">
+        多爆 <b style="color:var(--red)" id="liq-long">$--</b> · 空爆 <b style="color:var(--green)" id="liq-short">$--</b><br>
+        BTC-OI <b style="color:var(--text)" id="btc-oi">--</b> · ETH-OI <b style="color:var(--text)" id="eth-oi">--</b>
+        <span id="liq-note" style="color:var(--dimmer)"></span>
+        <span id="btc-oi-note" style="display:none"></span><span id="eth-oi-note" style="display:none"></span>
+        <div id="funding-list" style="font-size:10px"></div>
+      </div>
+    </div>
+    <!-- 实时异动（紧凑） -->
+    <div class="panel" id="alerts-panel" style="padding:12px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--dim);margin-bottom:8px">实时异动 <span style="color:var(--green);font-weight:400">3秒检测</span></div>
+      <div id="surge-list" style="font-size:10px;line-height:1.7;color:var(--dim);max-height:90px;overflow:hidden">
+        <div style="color:var(--dimmer)">监控中…</div>
+      </div>
+    </div>
+  </div><!-- /L3 -->
+
+
+
+  <!-- 6 stats（底部战绩概览） -->
+  <div class="stats">
+    <div class="stat"><div class="stat-label">累计净值</div><div class="stat-value g">4.53x</div><div class="stat-sub">12 笔等权复利</div></div>
+    <div class="stat"><div class="stat-label">胜率</div><div class="stat-value g">80%</div><div class="stat-sub">10 胜 2 负</div></div>
+    <div class="stat"><div class="stat-label">盈亏比</div><div class="stat-value y">3.3 : 1</div><div class="stat-sub">均盈 24.5% / 均亏 7.5%</div></div>
+    <div class="stat"><div class="stat-label">最大回撤</div><div class="stat-value r">−8.0%</div><div class="stat-sub">9-24 FIL 止损</div></div>
+    <div class="stat"><div class="stat-label">单笔峰值</div><div class="stat-value y">+78.7%</div><div class="stat-sub">Q · 10-19</div></div>
+    <div class="stat"><div class="stat-label">正确否决</div><div class="stat-value b">5</div><div class="stat-sub">规避崩盘</div></div>
+  </div>
+
+  <!-- L4: 底部复盘区 -->
+  <!-- 策略教学图 + 净值曲线（一行两栏） -->
+  <div class="l4-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">回踩介入策略 <b>· 四步法</b></div></div>
+      <svg viewBox="0 0 800 280" style="width:100%;height:auto;background:var(--panel-2);border-radius:10px">
+        <line x1="50" y1="200" x2="750" y2="200" stroke="#666" stroke-width="1" stroke-dasharray="6,4"/>
+        <text x="55" y="195" fill="#888" font-size="11">前高/突破位</text>
+        <line x1="350" y1="235" x2="750" y2="235" stroke="#e84f66" stroke-width="1" stroke-dasharray="6,4"/>
+        <text x="680" y="250" fill="#e84f66" font-size="11">止损位</text>
+        <line x1="350" y1="185" x2="750" y2="185" stroke="#666" stroke-width="1" stroke-dasharray="6,4"/>
+        <text x="620" y="180" fill="#888" font-size="11">回踩支撑位</text>
+        <path d="M50,240 Q150,235 250,185 Q300,125 350,115 Q400,115 450,155 Q500,185 550,180 Q600,175 650,135 Q700,85 750,65" fill="none" stroke="#1e3a5f" stroke-width="3"/>
+        <circle cx="250" cy="185" r="11" fill="#1e3a5f"/><text x="250" y="190" fill="#fff" font-size="12" text-anchor="middle" font-weight="bold">1</text>
+        <circle cx="420" cy="165" r="11" fill="#666"/><text x="420" y="170" fill="#fff" font-size="12" text-anchor="middle" font-weight="bold">2</text>
+        <circle cx="550" cy="180" r="11" fill="#1e3a5f"/><text x="550" y="185" fill="#fff" font-size="12" text-anchor="middle" font-weight="bold">3</text>
+        <circle cx="680" cy="100" r="13" fill="#e84f66"/><text x="680" y="105" fill="#fff" font-size="12" text-anchor="middle" font-weight="bold">4</text>
+        <text x="680" y="80" fill="#e84f66" font-size="12" text-anchor="middle">买点</text>
+        <rect x="370" y="125" width="160" height="95" fill="rgba(255,255,255,0.05)" rx="8"/>
+        <text x="450" y="120" fill="#888" font-size="11" text-anchor="middle">回踩区（缩量）</text>
+      </svg>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;font-size:11px">
+        <div style="padding:8px;background:var(--panel-2);border-radius:6px"><b style="color:var(--gold)">1 放量突破</b><div style="color:var(--dim);margin-top:3px">涨幅榜前列，突破前高</div></div>
+        <div style="padding:8px;background:var(--panel-2);border-radius:6px"><b style="color:var(--gold)">2 回踩</b><div style="color:var(--dim);margin-top:3px">斐波那 0.382–0.5</div></div>
+        <div style="padding:8px;background:var(--panel-2);border-radius:6px"><b style="color:var(--gold)">3 缩量企稳</b><div style="color:var(--dim);margin-top:3px">不破支撑，止跌K线</div></div>
+        <div style="padding:8px;background:var(--panel-2);border-radius:6px"><b style="color:var(--gold)">4 放量再启动</b><div style="color:var(--dim);margin-top:3px">放量上攻介入，破位止损</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">净值曲线 <b>· 累计收益</b></div><span style="font-size:10px;color:var(--dim)">更新 10-20</span></div>
+      <div id="navChart2" style="width:100%;height:260px"></div>
+    </div>
+  </div>
+
+  <!-- 推荐战绩（整宽） -->
+  <div class="panel" id="history" style="margin-bottom:14px;max-height:380px;overflow-y:auto;scroll-margin-top:20px">
+    <div class="panel-head"><div class="panel-title">推荐战绩 <b>· 共 16 笔</b> <button onclick="sortHistory()" id="sort-btn" style="margin-left:10px;padding:2px 10px;background:var(--bg);border:1px solid var(--border);color:var(--gold);border-radius:4px;font-size:11px;cursor:pointer">收益率↓</button></div><div class="live-badge">9-17 → 10-20</div></div>
+    <div class="h-grid" id="history-grid"></div>
+  </div>
+
+  <!-- 交易笔记 + 策略复盘（一行两栏） -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+    <div class="panel" style="scroll-margin-top:20px">
+      <div class="panel-head"><div class="panel-title">今日交易笔记 <b>· 记录操作和心态</b></div>
+        <select id="note-history" onchange="loadHistoryNote()" style="background:var(--panel-2);color:var(--dim);border:1px solid var(--border);border-radius:4px;font-size:11px;padding:2px 6px">
+          <option value="">今日</option>
+        </select>
+      </div>
+      <textarea id="trade-note" placeholder="今天做了什么操作？为什么？心态如何？&#10;&#10;例：PHA 可挂低吸 0.050 没到，追高了……" style="width:100%;min-height:110px;max-height:180px;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:12px;font-size:13px;font-family:'Noto Sans SC',sans-serif;resize:vertical;line-height:1.6;box-sizing:border-box"></textarea>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+        <button onclick="saveNote()" style="background:var(--gold);color:#000;border:none;border-radius:6px;padding:8px 20px;font-size:12px;font-weight:700;cursor:pointer">保存笔记</button>
+        <span id="note-saved" style="font-size:11px;color:var(--green)"></span>
+      </div>
+    </div>
+    <div class="panel" style="scroll-margin-top:20px">
+      <div class="panel-head"><div class="panel-title">策略复盘 <b>· 二波战法纪律检查</b></div></div>
+      <div style="font-size:12px;line-height:2;color:var(--dim)">
+        <div style="color:var(--text);font-weight:600;margin-bottom:6px">今日是否遵守纪律？</div>
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><input type="checkbox" id="r1"> 只做涨幅>15%后的回踩，不追高</label>
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><input type="checkbox" id="r2"> 回踩30%-50%区间才进，不早不晚</label>
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><input type="checkbox" id="r3"> 破位61.8%坚决止损，不扛单</label>
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><input type="checkbox" id="r4"> 单仓≤8%，不加仓不摊平</label>
+        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="r5"> 收盘前复盘，不情绪化操作</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">内容仅作科普，不构成投资建议，理财有风险，投资需谨慎</div>
+
+  <!-- 计算器弹窗 -->
+  <div id="calcModal" onclick="if(event.target===this)closeCalc()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:center">
+    <div style="background:#0d1117;border:1px solid var(--border);border-radius:16px;padding:24px;width:380px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-size:16px;font-weight:700;color:var(--gold)">仓位计算器</div>
+        <button onclick="closeCalc()" style="background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;line-height:1">×</button>
+      </div>
+      <div class="calc">
+        <label>总资金 (USD)</label>
+        <input id="cap" type="number" value="10000" oninput="calc()">
+        <label>单笔风险上限 (%)</label>
+        <input id="risk" type="number" value="8" oninput="calc()">
+        <div style="height:1px;background:var(--border);margin:8px 0"></div>
+        <label>入场价</label>
+        <input id="entry" type="number" step="any" value="0.27" oninput="calc()">
+        <label>止损价</label>
+        <input id="sl" type="number" step="any" value="0.23" oninput="calc()">
+        <label>目标价</label>
+        <input id="tp" type="number" step="any" value="0.45" oninput="calc()">
+        <label>杠杆 (x，现货=1)</label>
+        <input id="lev" type="number" value="1" min="1" oninput="calc()">
+        <div class="calc-result" id="calcOut"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Equity chart data
+const labels=['起始','ARB\n+28%','UNI\n+30%','DOT\n+4.8%','FIL\n+4.2%','FIL\n−8%','GTC\n+47.8%','FIL\n+12%','DOT\n+15%','FIL\n−7%','Q\n+53.2%'];
+let nav=1.0;const navs=[1.0];
+[28,30,4.8,4.2,-8,47.83,11.96,15,-7,53.2].forEach(r=>{nav*=(1+r/100);navs.push(+nav.toFixed(3));});
+
+// 净值曲线（右侧策略示意）——等DOM加载完再初始化
+window.addEventListener('DOMContentLoaded', () => {
+  renderHistoryTable([]);
+  try {
+    const el = document.getElementById('navChart2');
+    if (!el) return;
+    const chart2 = echarts.init(el);
+    chart2.setOption({
+      backgroundColor:'transparent',
+      grid:{left:35,right:15,top:10,bottom:25},
+      tooltip:{trigger:'axis',backgroundColor:'#1a1f2e',borderColor:'rgba(245,197,24,0.3)',textStyle:{color:'#fff',fontSize:11}},
+      xAxis:{type:'category',data:labels,axisLabel:{color:'rgba(232,234,237,0.4)',fontSize:8,interval:0,rotate:30},axisLine:{lineStyle:{color:'rgba(255,255,255,0.08)'}},axisTick:{show:false}},
+      yAxis:{type:'value',axisLabel:{color:'rgba(232,234,237,0.4)',fontSize:9,formatter:'{value}x'},splitLine:{lineStyle:{color:'rgba(255,255,255,0.04)'}}},
+      series:[{type:'line',data:navs,smooth:0.3,symbol:'circle',symbolSize:5,
+        lineStyle:{color:'#F5C518',width:2,shadowColor:'rgba(245,197,24,0.5)',shadowBlur:8},
+        itemStyle:{color:'#F5C518',borderColor:'#07090F',borderWidth:2},
+        areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(245,197,24,0.25)'},{offset:1,color:'rgba(245,197,24,0)'}])},
+        markLine:{silent:true,data:[{yAxis:1,lineStyle:{color:'rgba(255,255,255,0.15)',type:'dashed'}}]}
+      }]
+    });
+    window.addEventListener('resize', () => chart2.resize());
+  } catch(e) { console.warn('navChart2', e); }
+});
+
+// Position sizer
+function calc(){
+  const cap=parseFloat(document.getElementById('cap').value)||0;
+  const risk=parseFloat(document.getElementById('risk').value)||8;
+  const entry=parseFloat(document.getElementById('entry').value)||0;
+  const sl=parseFloat(document.getElementById('sl').value)||0;
+  const tp=parseFloat(document.getElementById('tp').value)||0;
+  const lev=parseFloat(document.getElementById('lev').value)||1;
+
+  const riskUsd = cap * risk / 100;           // 单笔可亏金额
+  const stopDist = entry>0 ? Math.abs(entry-sl)/entry*100 : 0;  // 止损距离%
+  const posNotional = stopDist>0 ? riskUsd / (stopDist/100) : 0; // 仓位名义价值
+  const margin = posNotional / lev;            // 占用保证金
+  const qty = entry>0 ? posNotional / entry : 0;
+
+  // 收益
+  const retPct = entry>0 ? (tp-entry)/entry*100 : 0;
+  const profitUsd = posNotional * retPct/100;
+  const lossPct = entry>0 ? Math.abs(entry-sl)/entry*100 : 0;
+  const plRatio = lossPct>0 ? retPct/lossPct : 0;
+
+  // 爆仓价（逐仓多头，维持保证金率 0.5%）
+  let liqPrice = null;
+  if (lev > 1 && entry > 0) {
+    liqPrice = entry * (1 - 1/lev + 0.005);  // 简化公式
+  }
+
+  document.getElementById('calcOut').innerHTML=`
+    <div class="row"><span>单笔风险额度</span><b style="color:#F5C518">$${riskUsd.toFixed(0)}</b></div>
+    <div class="row"><span>止损距离</span><b>${stopDist.toFixed(1)}%</b></div>
+    <div class="row"><span>仓位名义</span><b>$${posNotional.toFixed(0)}</b></div>
+    <div class="row"><span>占用保证金</span><b>$${margin.toFixed(0)}</b></div>
+    <div class="row"><span>持仓数量</span><b>${qty.toFixed(2)} 枚</b></div>
+    <div style="height:1px;background:var(--border);margin:8px 0"></div>
+    <div class="row"><span>到目标收益</span><b style="color:#00D09C">+${retPct.toFixed(1)}%</b></div>
+    <div class="row"><span>目标盈利</span><b style="color:#00D09C">+$${profitUsd.toFixed(0)}</b></div>
+    <div class="row"><span>盈亏比</span><b style="color:#F5C518">${plRatio.toFixed(2)} : 1</b></div>
+    ${liqPrice ? `<div class="row"><span>预估爆仓价</span><b style="color:#FF4D67">$${liqPrice.toFixed(4)}</b></div>` : '<div class="row"><span>爆仓价</span><b style="color:var(--dim)">现货无爆仓</b></div>'}
+  `;
+}
+calc();
+function openCalc(){document.getElementById('calcModal').style.display='flex';calc();}
+function closeCalc(){document.getElementById('calcModal').style.display='none';}
+
+// ===== 实时行情：OKX SWAP 合约，15s 刷新 =====
+const WORKER_URL = 'https://floral-dew-1e2b.starstkan.workers.dev';
+
+// 共享 movers 缓存
+let moversCache = { data: null, ts: 0 };
+
+// Binance 备用数据源
+async function fetchFromBinance() {
+  const symbols = ['BTCUSDT','ETHUSDT','SOLUSDT','PHAUSDT','SANDUSDT','ARBUSDT','UNIUSDT','DOTUSDT','FILUSDT','DOGEUSDT','WLDUSDT'];
+  const url = 'https://api.binance.com/api/v3/ticker/24hr?symbols=' + encodeURIComponent(JSON.stringify(symbols));
+  const r = await fetch(url, {cache:'no-store'});
+  const data = await r.json();
+  if (!Array.isArray(data)) return [];
+  return data.map(d => {
+    const sym = d.symbol.replace('USDT','');
+    return {
+      sym: sym,
+      current_price: parseFloat(d.lastPrice),
+      price_change_percentage_24h: parseFloat(d.priceChangePercent),
+      high_24h: parseFloat(d.highPrice),
+      low_24h: parseFloat(d.lowPrice),
+      volume: parseFloat(d.volume),
+    };
+  }).filter(x => x.current_price);
+}
+
+async function fetchMovers() {
+  if (moversCache.data && Date.now() - moversCache.ts < 15000) return moversCache.data;
+  try {
+    const r = await fetch(WORKER_URL + '/movers?_t=' + Date.now(), {cache:'no-store', signal: AbortSignal.timeout(8000)});
+    const list = await r.json();
+    if (Array.isArray(list) && list.length > 10) {
+      moversCache = { data: list, ts: Date.now() };
+      return list;
+    }
+  } catch(e) { console.warn('worker unavailable', e); }
+  return moversCache.data || [];
+}
+
+const state = { prices: {}, fng: null, baseline: {} };
+
+// 每日早8点基准价（新加坡/吉隆坡 UTC+8）
+function getTodayKey() {
+  const now = new Date();
+  const h = now.getHours();
+  // 8点前用昨天的key
+  const d = new Date(now);
+  if (h < 8) d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+function loadBaseline() {
+  try {
+    const k = 'baseline_' + getTodayKey();
+    const raw = localStorage.getItem(k);
+    if (raw) state.baseline = JSON.parse(raw);
+  } catch(e) { state.baseline = {}; }
+}
+function saveBaseline(prices) {
+  const k = 'baseline_' + getTodayKey();
+  try { localStorage.setItem(k, JSON.stringify(prices)); } catch(e) {}
+}
+function chgFromBaseline(sym, price) {
+  const b = state.baseline[sym];
+  if (!b || !b.price) return null;
+  return (price - b.price) / b.price * 100;
+}
+const fmt = (p) => p >= 1000 ? p.toLocaleString('en-US',{maximumFractionDigits:0}) : p >= 1 ? p.toFixed(2) : p >= 0.01 ? p.toFixed(4) : p.toFixed(6);
+
+async function fetchPrices() {
+  let txt = '';
+  try {
+    const r = await fetch(WORKER_URL + '/tickers?_t=' + Date.now(), {cache:'no-store'});
+    txt = await r.text();
+    const list = JSON.parse(txt);
+    if (!Array.isArray(list)) throw new Error('not array');
+    console.log('OKX count:', list.length);
+    const out = {};
+    const tracked = ['BTC','ETH','SOL','ARB','FIL','DOT','UNI','SAND','PHA','NEAR'];
+    list.forEach(c => {
+      if (!tracked.includes(c.symbol)) return;
+      out[c.symbol] = { price: c.current_price, chg: c.price_change_percentage_24h || 0 };
+    });
+    const gtc = await fetchGTC();
+    if (gtc) out.GTC = gtc;
+    console.log('matched:', Object.keys(out));
+    if (Object.keys(out).length >= 5) return out;
+  } catch(e) { console.warn('tickers failed', e, 'resp:', txt.slice(0,200)); }
+  return null;
+}
+
+async function fetchGTC() {
+  try {
+    const r = await fetch(WORKER_URL + '/cg/api/v3/simple/price?ids=gitcoin&vs_currencies=usd&include_24hr_change=true', {cache:'no-store'});
+    const d = await r.json();
+    if (d.gitcoin && d.gitcoin.usd) return { price: d.gitcoin.usd, chg: d.gitcoin.usd_24h_change || 0 };
+  } catch(e) {}
+  return null;
+}
+
+function render(data) {
+  state.prices = {...state.prices, ...data};
+  // 首次（今天还没基准）时存当前价为今日早8点基准
+  if (!state.baseline || Object.keys(state.baseline).length === 0) {
+    loadBaseline();
+    if (Object.keys(state.baseline).length === 0) {
+      const snap = {};
+      Object.entries(data).forEach(([s, d]) => snap[s] = { price: d.price });
+      state.baseline = snap;
+      saveBaseline(snap);
+    }
+  }
+  // 取每只币的"相对今日基准"涨跌幅（没有基准就退回24h）
+  function adjChg(sym, d) {
+    const b = chgFromBaseline(sym, d.price);
+    let r = b !== null ? b : d.chg;
+    if (Math.abs(r) > 100) r = 0;
+    return r;
+  }
+  checkAlerts();
+  // Ticker bar
+  document.querySelectorAll('.ticker span').forEach(el => {
+    const m = el.textContent.match(/^([A-Z]+)/);
+    if (!m) return;
+    const sym = m[1];
+    const d = data[sym];
+    if (!d) return;
+    const c = adjChg(sym, d);
+    el.innerHTML = `${sym} <b>$${fmt(d.price)}</b> <span class="${c>=0?'up':'down'}">${c>=0?'+':''}${c.toFixed(2)}%</span>`;
+  });
+  // Header BTC
+  if (data.BTC) {
+    document.querySelector('.btc-price').textContent = '$' + data.BTC.price.toLocaleString('en-US',{maximumFractionDigits:0});
+    const c = adjChg('BTC', data.BTC);
+    const chgEl = document.querySelector('.btc-chg');
+    chgEl.textContent = (c>=0?'+':'') + c.toFixed(2) + '%';
+    chgEl.style.color = c >= 0 ? 'var(--green)' : 'var(--red)';
+  }
+  // Active ops: GTC and FIL big price
+  document.querySelectorAll('.op').forEach(op => {
+    const sym = op.querySelector('.op-sym')?.textContent.trim().replace('★','').trim();
+    const d = data[sym];
+    if (!d) return;
+    const big = op.querySelector('.op-big');
+    if (big && !big.classList.contains('g')) big.textContent = '$' + fmt(d.price);
+  });
+  // Watchlist 动态渲染
+  renderWatchlist(state.prices);
+  // 今日待办主视觉里的实时价格（PHA/SAND）
+  if (data.PHA) {
+    const c = adjChg('PHA', data.PHA);
+    const el = document.getElementById('todo-pha-big');
+    if (el) el.textContent = '$' + fmt(data.PHA.price);
+    const elc = document.getElementById('todo-pha-chg');
+    if (elc) elc.textContent = (c>=0?'+':'') + c.toFixed(2) + '% 24h';
+    if (elc) elc.style.color = c >= 0 ? 'var(--green)' : 'var(--red)';
+  }
+  if (data.SAND) {
+    const c = adjChg('SAND', data.SAND);
+    const el = document.getElementById('todo-sand-big');
+    if (el) el.textContent = '$' + fmt(data.SAND.price);
+    const elc = document.getElementById('todo-sand-chg');
+    if (elc) elc.textContent = (c>=0?'+':'') + c.toFixed(2) + '% 今日回踩';
+    if (elc) elc.style.color = c >= 0 ? 'var(--green)' : 'var(--red)';
+  }
+  // ETH/BTC 汇率
+  if (data.BTC && data.ETH && data.BTC.price && data.ETH.price) {
+    const ratio = data.ETH.price / data.BTC.price;
+    const ce = adjChg('ETH', data.ETH), cb = adjChg('BTC', data.BTC);
+    const chg = ce - cb;
+    document.getElementById('eth-btc').textContent = ratio.toFixed(5);
+    document.getElementById('eth-btc-chg').textContent = (chg>=0?'+':'') + chg.toFixed(2) + '% (今日)';
+    document.getElementById('eth-btc-chg').style.color = chg >= 0 ? 'var(--green)' : 'var(--red)';
+  }
+  renderMarketBrief(data);
+  checkSignals(data);
+  checkSurge(data);
+}
+
+// 异动监控：3秒内涨跌超3%报警
+const surgePrev = {};
+function checkSurge(data) {
+  const list = document.getElementById('surge-list');
+  if (!list) return;
+  const now = Date.now();
+  const alerts = [];
+  Object.entries(data).forEach(([sym, d]) => {
+    if (!d || !d.price) return;
+    const prev = surgePrev[sym];
+    if (prev && now - prev.t < 300000) { // 5分钟内
+      const chg = (d.price - prev.p) / prev.p * 100;
+      if (Math.abs(chg) >= 3 && Math.abs(chg) < 100) {
+        alerts.push({sym, chg, price: d.price});
+        // 推送到跑马灯
+        if (!surgePrev[sym].fired || now - surgePrev[sym].fired > 60000) {
+          pushSignal(`${sym} 异动`, `${chg>=0?'快速拉升':'快速下跌'} ${Math.abs(chg).toFixed(2)}% @ $${d.price}`, chg>=0?'var(--gold)':'var(--red)');
+          surgePrev[sym].fired = now;
+        }
+      }
+    }
+    surgePrev[sym] = {p: d.price, t: now, fired: surgePrev[sym]?.fired || 0};
+  });
+  if (alerts.length > 0) {
+    list.innerHTML = alerts.map(a =>
+      `<div style="display:flex;justify-content:space-between;padding:6px 10px;background:rgba(255,255,255,0.03);border-left:3px solid ${a.chg>=0?'var(--gold)':'var(--red)'}">
+        <span style="font-weight:700;color:var(--text)">${a.sym}</span>
+        <span style="font-family:'JetBrains Mono',monospace;color:${a.chg>=0?'var(--gold)':'var(--red)'}">${a.chg>=0?'+':''}${a.chg.toFixed(2)}% · $${a.price}</span>
+      </div>`
+    ).join('');
+  } else {
+    // 显示当前涨幅榜前5作为异动
+    const movers = [];
+    Object.entries(data).forEach(([sym,d]) => { if(d && d.chg) movers.push({sym, chg:d.chg, price:d.price}); });
+    movers.sort((a,b) => Math.abs(b.chg) - Math.abs(a.chg));
+    const top = movers.slice(0,5);
+    list.innerHTML = top.map(a =>
+      `<div style="display:flex;justify-content:space-between;padding:6px 10px;background:rgba(255,255,255,0.03);border-left:3px solid ${a.chg>=0?'var(--gold)':'var(--red)'}">
+        <span style="font-weight:700;color:var(--text)">${a.sym}</span>
+        <span style="font-family:'JetBrains Mono',monospace;color:${a.chg>=0?'var(--gold)':'var(--red)'}">${a.chg>=0?'+':''}${a.chg.toFixed(2)}% · $${a.price}</span>
+      </div>`
+    ).join('') || '<div style="text-align:center;padding:10px">监控中…</div>';
+  }
+}
+
+// 漏斗：观察池(涨幅>15%) → 回踩到位升级待办 → 触发入场变持仓
+let watchPool = [];
+const autoDiscovered = new Set();
+
+async function discoverMovers() {
+  let coins = [];
+  try {
+    const list = await fetchMovers();
+    coins = list
+      .filter(c => c.current_price && c.price_change_percentage_24h)
+      .map(c => ({symbol: c.symbol, current_price: c.current_price, price_change_percentage_24h: c.price_change_percentage_24h}))
+      .sort((a,b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
+  } catch(e) { console.warn('movers failed', e); }
+
+  if (!coins.length) {
+    const tracked = Object.entries(state.prices)
+      .filter(([sym,d]) => d && d.chg !== undefined && sym !== 'GTC' && sym !== 'FIL')
+      .sort((a,b) => b[1].chg - a[1].chg)
+      .slice(0, 5);
+    tracked.forEach(([sym, d]) => {
+      if (watchPool.find(w => w.sym === sym)) return;
+      autoDiscovered.add(sym);
+      watchPool.push({sym, tier:'watch', peakChg: d.chg, note: sym + ' · 强势观察'});
+    });
+    return;
+  }
+  coins.filter(c => c.price_change_percentage_24h > 15).forEach(c => {
+    const sym = c.symbol;
+    state.prices[sym] = { price: c.current_price, chg: c.price_change_percentage_24h };
+    if (!watchPool.find(w => w.sym === sym)) {
+      autoDiscovered.add(sym);
+      watchPool.push({sym, tier:'watch', peakChg: c.price_change_percentage_24h, note:'强势 ' + c.price_change_percentage_24h.toFixed(1) + '% · 等回踩'});
+    }
+  });
+
+}
+
+function renderWatchlist(data) {
+  const el = document.getElementById('watchlist-body');
+  if (!el) return;
+  // 显示所有活跃的（todo + watch），按 24h 涨幅从高到低排
+  let watchRows = watchPool.filter(w => w.tier !== 'closed');
+  watchRows.sort((a, b) => {
+    const ca = data[a.sym] ? data[a.sym].chg : -999;
+    const cb = data[b.sym] ? data[b.sym].chg : -999;
+    return cb - ca;
+  });
+  if (watchRows.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:16px;color:var(--dim);font-size:11px">观察池为空 · 扫描强势币中…</div>';
+    return;
+  }
+  el.innerHTML = watchRows.map(w => {
+    const d = data[w.sym];
+    const c = d ? d.chg : 0;
+    const p = d ? d.price : 0;
+    // 回撤：从今日最高涨幅回落了多少百分比
+    const retrace = w.peakChg > 0 ? ((w.peakChg - (d?.chg||0)) / w.peakChg * 100) : 0;
+    const retraceStr = retrace > 1 ? '高点回落' + retrace.toFixed(0) + '%' : '仍在高位';
+    // 自动评分
+    let score = 0;
+    if (w.peakChg >= 30) score += 25;
+    else if (w.peakChg >= 20) score += 18;
+    else if (w.peakChg >= 15) score += 10;
+    if (retrace >= 30 && retrace <= 50) score += 35;
+    else if (retrace >= 20 && retrace < 30) score += 20;
+    else if (retrace > 61.8) score -= 20;
+    if (Math.abs(c) < 5) score += 10;
+    // 自动算止损止盈
+    const entry = p;
+    const stop = entry ? entry * 0.95 : 0;
+    const target = entry ? entry * 1.3 : 0;
+    w.score = score;
+    const badge = w.top || score >= 40 ? '<span style="background:var(--gold);color:#000;font-size:9px;padding:1px 5px;border-radius:3px;margin-left:6px;font-weight:700">首推</span>' : '';
+    const sltp = w.stop ? `止损$${w.stop} · 目标$${w.target||'--'}` : (entry ? `止损$${stop.toFixed(3)} · 目标$${target.toFixed(3)}` : '');
+    return `<div class="wl-item"><div><div class="wl-sym">${w.sym}${badge} <span style="font-size:10px;color:var(--dimmer)">${score}分</span></div><div class="wl-info" style="color:var(--dim)">${w.note} · ${retraceStr} · $${fmt(p)}<br><span style="color:var(--gold);font-size:10px">${sltp}</span></div></div><div class="wl-chg ${c>=0?'up':c<-1?'down':'flat'}">${(c>=0?'+':'')+c.toFixed(2)}%</div></div>`;
+  }).join('');
+}
+
+function renderMarketBrief(data) {
+  const el = document.getElementById('market-brief');
+  if (!el) return;
+  const fng = state.fng;
+  const btcChg = data.BTC ? adjChgGlobal('BTC', data.BTC) : 0;
+  const lines = [];
+
+  // FNG 解读
+  if (fng !== null) {
+    if (fng < 25) lines.push(`<span style="color:var(--red)">极度恐惧（${fng}）</span>：散户割肉盘涌出，庄家可能在低位吸筹，是逆向布局窗口。`);
+    else if (fng < 45) lines.push(`<span style="color:var(--orange)">恐惧（${fng}）</span>：情绪偏悲观，反弹需放量确认，不宜追高。`);
+    else if (fng < 55) lines.push(`<span style="color:var(--gold)">中性（${fng}）</span>：多空均衡，按计划执行回踩策略，不预判方向。`);
+    else if (fng < 75) lines.push(`<span style="color:var(--green)">贪婪（${fng}）</span>：情绪偏热，追高风险加大，持仓者可考虑分批止盈。`);
+    else lines.push(`<span style="color:var(--blue)">极度贪婪（${fng}）</span>：追涨情绪蔓延，警惕庄家出货，收紧止损。`);
+  }
+  // BTC 涨跌
+  if (btcChg !== 0) {
+    lines.push(btcChg >= 0
+      ? `BTC 今日 ${btcChg>=0?'+':''}${btcChg.toFixed(2)}%，风险偏好上升，强势山寨更易走出二波行情。`
+      : `BTC 今日 ${btcChg.toFixed(2)}%，避险情绪升温，减仓观望，等缩量企稳再介入。`);
+  }
+  // PHA 当前位置解读
+  if (data.PHA) {
+    const p = data.PHA.price;
+    if (p > 0.053) lines.push(`PHA 当前 $${p.toFixed(4)}，距挂单区 $0.050-0.053 还有 ${((p-0.053)/p*100).toFixed(1)}%，等回踩不追高。`);
+    else if (p >= 0.050) lines.push(`PHA 已进入挂单区 $0.050-0.053，可挂低吸，止损 $0.047。`);
+    else lines.push(`PHA 跌破挂单区 $0.050，警惕止损位 $0.047。`);
+  }
+  el.innerHTML = lines.join('<br>');
+}
+
+// 全局辅助：取某币相对今日基准的涨跌幅
+function adjChgGlobal(sym, d) {
+  const b = state.baseline[sym];
+  if (!b || !b.price) return d.chg || 0;
+  return (d.price - b.price) / b.price * 100;
+}
+
+// 信号检测：进场/止损/止盈
+const SIGNAL_RULES = [
+  {sym:'PHA', type:'enter',  label:'PHA 触发挂单区',   low:0.050, high:0.053, color:'var(--gold)'},
+  {sym:'PHA', type:'stop',   label:'PHA 触发止损',     price:0.047, side:'below', color:'var(--red)'},
+  {sym:'PHA', type:'target', label:'PHA 触发目标',     price:0.075, side:'above', color:'var(--green)'},
+  {sym:'SAND', type:'enter', label:'SAND 触发挂单区',  low:0.050, high:0.053, color:'var(--blue)'},
+  {sym:'SAND', type:'stop',  label:'SAND 触发止损',    price:0.044, side:'below', color:'var(--red)'},
+];
+function getFired() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('fired_signals') || '{}');
+    // 每天重置已触发记录
+    const today = getTodayKey();
+    if (raw._day !== today) return {};
+    return raw;
+  } catch(e) { return {}; }
+}
+function setFired(k) {
+  const f = getFired(); f[k] = Date.now(); f._day = getTodayKey();
+  try { localStorage.setItem('fired_signals', JSON.stringify(f)); } catch(e) {}
+}
+function pushSignal(title, desc, color) {
+  const m = document.getElementById('signalMarquee');
+  if (!m) return;
+  const now = new Date();
+  const ts = now.toTimeString().slice(0,8);
+  const seg = `<span style="color:${color};font-weight:600">${ts} ${title}</span> <span style="color:var(--dim)">${desc}</span> ·&nbsp;`;
+  m.innerHTML = seg + m.innerHTML;
+}
+function checkSignals(data) {
+  const fired = getFired();
+  SIGNAL_RULES.forEach(rule => {
+    const d = data[rule.sym];
+    if (!d) return;
+    const k = rule.sym + '_' + rule.type;
+    if (fired[k]) return; // 今天已触发过
+    let hit = false;
+    if (rule.type === 'enter') {
+      hit = d.price >= rule.low && d.price <= rule.high;
+    } else if (rule.side === 'below') {
+      hit = d.price <= rule.price;
+    } else if (rule.side === 'above') {
+      hit = d.price >= rule.price;
+    }
+    if (hit) {
+      setFired(k);
+      pushSignal(rule.label, `${rule.sym} 当前 $${fmt(d.price)}`, rule.color);
+    }
+  });
+}
+
+async function refresh() {
+  const sub = document.querySelector('.brand .sub');
+  try {
+    const bn = await fetchPrices();
+    if (bn) render(bn);
+    const now = new Date();
+    if (sub) {
+      const d = new Date();
+      const ds = d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0');
+      sub.textContent = `// 实时 · ${ds} ${d.toLocaleTimeString('zh-CN',{hour12:false})} · Bybit合约价 · 新加坡时间8点基准`;
+    }
+  } catch(e) {
+    console.warn('行情拉取失败', e);
+    if (sub) {
+      const d = new Date();
+      const ds = d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0');
+      sub.textContent = `${ds} ${d.toLocaleTimeString('zh-CN',{hour12:false})} · 合约价 · 新加坡时间8点基准`;
+    }
+  }
+}
+window.scrollTo(0,0);
+refresh();
+setInterval(refresh, 15000);
+discoverMovers();
+setInterval(discoverMovers, 60000);
+
+// ===== 预警引擎 =====
+function checkAlerts() {
+  const alerts = [];
+  const p = state.prices;
+
+  // PHA 可挂低吸 $0.050-0.053
+  if (p.PHA) {
+    const pha = p.PHA.price;
+    if (pha >= 0.050 && pha <= 0.053) {
+      alerts.push({level:'crit', text:`PHA 已进入挂单区 $${pha.toFixed(4)}（$0.050–0.053）→ 已到挂单区`});
+    } else if (pha > 0.053 && pha < 0.058) {
+      alerts.push({level:'warn', text:`PHA 距挂单区还有 ${((pha-0.053)/pha*100).toFixed(1)}%，不追`});
+    }
+  }
+  // SAND 可挂低吸
+  if (p.SAND) {
+    const sand = p.SAND.price;
+    if (sand >= 0.050 && sand <= 0.053) {
+      alerts.push({level:'crit', text:`SAND 已进入挂单区 $${sand.toFixed(4)}（$0.050–0.053）→ 已到挂单区`});
+    }
+  }
+  // BTC 波动
+  if (p.BTC && Math.abs(p.BTC.chg) >= 3) {
+    alerts.push({level:'warn', text:`BTC 24h ${p.BTC.chg>=0?'+':''}${p.BTC.chg.toFixed(2)}%，波动过大`});
+  }
+  // FNG 极端
+  if (state.fng !== null) {
+    if (state.fng < 25) alerts.push({level:'crit', text:`恐惧贪婪 ${state.fng} · 极度恐惧 → 低吸窗口`});
+    else if (state.fng > 75) alerts.push({level:'warn', text:`恐惧贪婪 ${state.fng} · 极度贪婪 → 警惕回落`});
+  }
+  // 观察池异动
+  ['ARB','SAND'].forEach(sym => {
+    if (p[sym] && Math.abs(p[sym].chg) >= 10) {
+      alerts.push({level:'warn', text:`${sym} 24h ${p[sym].chg>=0?'+':''}${p[sym].chg.toFixed(1)}% 异动`});
+    }
+  });
+
+  const box = document.getElementById('alerts');
+  if (alerts.length === 0) {
+    box.innerHTML = '<div style="padding:8px 12px;border-radius:8px;background:rgba(0,208,156,0.08);border:1px solid rgba(0,208,156,0.2);font-size:11px;color:var(--green)">✓ 暂无预警，监控中…</div>';
+    return;
+  }
+  box.innerHTML = alerts.map(a => {
+    const colors = {
+      crit: 'background:rgba(255,77,103,0.12);border-color:rgba(255,77,103,0.4);color:#FF4D67;animation:blink 1.5s infinite',
+      warn: 'background:rgba(245,197,24,0.1);border-color:rgba(245,197,24,0.3);color:var(--gold)',
+      good: 'background:rgba(0,208,156,0.1);border-color:rgba(0,208,156,0.3);color:var(--green)'
+    };
+    return `<div style="padding:8px 12px;border-radius:8px;border:1px solid;font-size:11px;font-weight:600;${colors[a.level]}">${a.text}</div>`;
+  }).join('');
+}
+// 初始空状态
+checkAlerts();
+
+// ===== 大盘情绪 =====
+async function fetchSentiment() {
+  // 恐惧贪婪指数
+  try {
+    const r = await fetch(WORKER_URL ? WORKER_URL + '/fng?limit=1' : 'https://api.alternative.me/fng/?limit=1');
+    const d = await r.json();
+    const v = parseInt(d.data[0].value);
+    const label = d.data[0].value_classification;
+    state.fng = v;
+    document.getElementById('fng-val').textContent = v;
+    const lbl = document.getElementById('fng-label');
+    lbl.textContent = label;
+    lbl.style.color = v < 25 ? 'var(--red)' : v < 45 ? 'var(--orange)' : v < 55 ? 'var(--gold)' : v < 75 ? 'var(--green)' : 'var(--blue)';
+    document.getElementById('fng-dot').style.left = (v - 6) + '%';
+  } catch(e) { document.getElementById('fng-label').textContent = '行情暂不可用'; }
+
+  // BTC 主导率（多 CORS 代理兜底 CoinGecko global）
+  try {
+    let d = null;
+    try {
+      const r = await fetch(WORKER_URL + '/cg/api/v3/global', {cache:'no-store'});
+      const j = await r.json();
+      if (j && j.data && j.data.market_cap_percentage) d = j;
+    } catch(e) {}
+    if (d) {
+      const btcDom = d.data.market_cap_percentage.btc;
+      document.getElementById('btc-dom').textContent = btcDom.toFixed(1) + '%';
+      document.getElementById('btc-dom-note').textContent = btcDom > 55 ? '大盘主导 · 山寨难有行情' : btcDom > 48 ? '均衡 · 可做强势山寨' : '山寨季 · 资金外溢';
+    }
+  } catch(e) { document.getElementById('btc-dom').textContent = '--'; }
+}
+fetchSentiment();
+setInterval(fetchSentiment, 60000);
+
+// ===== 主力监控：爆仓 + OI =====
+async function fetchLiquidations() {
+  document.getElementById('liq-long').textContent = '--';
+  document.getElementById('liq-short').textContent = '--';
+  document.getElementById('liq-note').textContent = '强平数据暂不可用（Binance 接口限制）';
+}
+
+async function fetchOI(symbol, elId, chgId, noteId) {
+  document.getElementById(elId).textContent = '--';
+  document.getElementById(noteId).textContent = 'OI 暂不可用';
+}
+
+async function fetchFunding() {
+  document.getElementById('funding-list').innerHTML = '<div style="color:var(--dim)">暂不可用</div>';
+}
+
+async function fetchWhale() {
+  await Promise.all([
+    fetchLiquidations(),
+    fetchOI('BTC','btc-oi','btc-oi-chg','btc-oi-note'),
+    fetchOI('ETH','eth-oi','eth-oi-chg','eth-oi-note'),
+    fetchFunding()
+  ]);
+}
+fetchWhale();
+setInterval(fetchWhale, 60000);
+
+// ===== 笔记 & 复盘 =====
+function saveNote() {
+  const v = document.getElementById('trade-note').value;
+  localStorage.setItem('note_' + new Date().toDateString(), v);
+  document.getElementById('note-saved').textContent = '已保存';
+  setTimeout(() => document.getElementById('note-saved').textContent = '', 2000);
+  refreshNoteHistory();
+}
+function loadHistoryNote() {
+  const sel = document.getElementById('note-history');
+  const key = sel.value ? 'note_' + sel.value : 'note_' + new Date().toDateString();
+  document.getElementById('trade-note').value = localStorage.getItem(key) || '';
+}
+function refreshNoteHistory() {
+  const sel = document.getElementById('note-history');
+  const today = new Date().toDateString();
+  const dates = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k.startsWith('note_') && k.slice(5) !== today) dates.push(k.slice(5));
+  }
+  dates.sort().reverse();
+  sel.innerHTML = '<option value="">今日</option>' + dates.map(d => `<option value="${d}">${d}</option>`).join('');
+}
+(function() {
+  refreshNoteHistory();
+  const saved = localStorage.getItem('note_' + new Date().toDateString());
+  if (saved) document.getElementById('trade-note').value = saved;
+  for (let i = 1; i <= 5; i++) {
+    const c = localStorage.getItem('review_' + new Date().toDateString() + '_' + i);
+    if (c) document.getElementById('r' + i).checked = c === '1';
+    document.getElementById('r' + i).addEventListener('change', function() {
+      localStorage.setItem('review_' + new Date().toDateString() + '_' + i, this.checked ? '1' : '0');
+    });
+  }
+})();
+</script>
+</div><!-- /view-crypto -->
+
+<!-- A股龙头作战台 -->
+<div class="container" id="view-astock" style="display:none">
+  <div class="header">
+    <div class="brand">
+      <div class="tag">超级百晓生</div>
+      <h1 style="margin:0">中原<em>·逐鹿</em></h1>
+    </div>
+  </div>
+
+  <!-- L1: 今日待办主视觉（和加密同款） -->
+  <div class="panel" style="margin-bottom:14px">
+    <div class="panel-head"><div class="panel-title">今日待办 <b style="color:var(--gold)">· 盯盘操作卡</b></div><div style="font-size:11px;color:var(--dim);font-weight:600"><span style="color:var(--gold)" id="astock-date">--</span> <span id="astock-update-time2">--</span> <span id="astock-update-time">--:--:--</span></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+      <!-- 龙头主推（金框） -->
+      <div style="background:linear-gradient(135deg,rgba(245,197,24,0.08),rgba(0,0,0,0.3));border:1px solid rgba(245,197,24,0.3);border-radius:12px;padding:18px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:18px;font-weight:900" id="astock-todo1-name">-- <span style="font-size:10px;background:var(--gold);color:#000;padding:2px 8px;border-radius:4px;margin-left:6px;font-weight:800">龙头</span></div>
+          <div style="text-align:right">
+            <div style="font-size:26px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--gold)" id="astock-todo1-price">--</div>
+            <div style="font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace" id="astock-todo1-chg">--</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0;font-size:11px">
+          <div><div style="color:var(--dim);font-size:9px;letter-spacing:1px">关注买点</div><div style="font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace;margin-top:2px" id="astock-todo1-buy">--</div></div>
+          <div><div style="color:var(--dim);font-size:9px;letter-spacing:1px">加仓点</div><div style="font-weight:700;color:var(--blue);font-family:'JetBrains Mono',monospace;margin-top:2px" id="astock-todo1-add">--</div></div>
+          <div><div style="color:var(--dim);font-size:9px;letter-spacing:1px">止损</div><div style="font-weight:700;color:var(--red);font-family:'JetBrains Mono',monospace;margin-top:2px" id="astock-todo1-stop">--</div></div>
+          <div><div style="color:var(--dim);font-size:9px;letter-spacing:1px">目标</div><div style="font-weight:700;color:var(--green);font-family:'JetBrains Mono',monospace;margin-top:2px" id="astock-todo1-target">--</div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dimmer);font-family:'JetBrains Mono',monospace;padding-top:8px;border-top:1px solid var(--border)">
+          <span id="astock-todo1-action">操作：--</span>
+          <span>仓位 <b style="color:var(--text)">≤3成</b></span>
+        </div>
+      </div>
+
+      <!-- 二波候选（蓝框） -->
+      <div style="background:linear-gradient(135deg,rgba(79,195,247,0.06),rgba(0,0,0,0.3));border:1px solid rgba(79,195,247,0.3);border-radius:12px;padding:18px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:18px;font-weight:900" id="astock-todo2-name">-- <span style="font-size:10px;background:var(--blue);color:#000;padding:2px 8px;border-radius:4px;margin-left:6px;font-weight:800">二波候选</span></div>
+          <div style="text-align:right">
+            <div style="font-size:26px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--blue)" id="astock-todo2-price">--</div>
+            <div style="font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace" id="astock-todo2-chg">--</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0;font-size:11px">
+          <div><div style="color:var(--dim);font-size:9px;letter-spacing:1px">回踩低吸</div><div style="font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace;margin-top:2px" id="astock-todo2-buy">--</div></div>
+          <div><div style="color:var(--dim);font-size:9px;letter-spacing:1px">反包确认</div><div style="font-weight:700;color:var(--blue);font-family:'JetBrains Mono',monospace;margin-top:2px" id="astock-todo2-add">--</div></div>
+          <div><div style="color:var(--dim);font-size:9px;letter-spacing:1px">止损</div><div style="font-weight:700;color:var(--red);font-family:'JetBrains Mono',monospace;margin-top:2px" id="astock-todo2-stop">--</div></div>
+          <div><div style="color:var(--dim);font-size:9px;letter-spacing:1px">目标</div><div style="font-weight:700;color:var(--green);font-family:'JetBrains Mono',monospace;margin-top:2px" id="astock-todo2-target">--</div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dimmer);font-family:'JetBrains Mono',monospace;padding-top:8px;border-top:1px solid var(--border)">
+          <span id="astock-todo2-action">操作：--</span>
+          <span>仓位 <b style="color:var(--text)">≤2成</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- A股信号跑马灯 -->
+  <div style="display:flex;align-items:center;gap:10px;background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.25);border-radius:8px;padding:8px 14px;margin-bottom:14px;overflow:hidden">
+    <div style="flex-shrink:0;color:var(--gold);font-size:14px">📢</div>
+    <div style="flex:1;overflow:hidden;white-space:nowrap">
+      <div style="display:inline-block;animation:marquee 30s linear infinite;font-size:12px;color:var(--dim)" id="astock-marquee">
+        <span style="color:var(--gold);font-weight:600">盯盘模式</span> · 开盘前更新龙头与二波候选 · 封单异动/炸板/反包信号即在此播报 · 断板减仓 · 反包确认加仓 ·&nbsp;
+      </div>
+    </div>
+  </div>
+
+  <div class="stats" style="grid-template-columns:repeat(6,1fr)">
+    <div class="stat"><div class="stat-label">当前龙头</div><div class="stat-value g" id="astock-leader">--</div><div class="stat-sub" id="astock-lbc">--</div></div>
+    <div class="stat"><div class="stat-label">涨停总数</div><div class="stat-value b" id="astock-total">--</div><div class="stat-sub">今日涨停家数</div></div>
+    <div class="stat"><div class="stat-label">分歧日</div><div class="stat-value b" id="astock-diff">--</div><div class="stat-sub">最高连板</div></div>
+    <div class="stat"><div class="stat-label">接力板</div><div class="stat-value g" id="astock-wave2">--</div><div class="stat-sub">2板候选</div></div>
+    <div class="stat"><div class="stat-label">板块梯队</div><div class="stat-value y" id="astock-ladder">--</div><div class="stat-sub">高/中/低位完整度</div></div>
+    <div class="stat"><div class="stat-label">仓位</div><div class="stat-value b" id="astock-pos">--</div><div class="stat-sub">龙头分歧期≤3成</div></div>
+  </div>
+
+  <div class="row" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
+    <div class="panel" style="border-left:3px solid var(--gold)">
+      <div class="panel-head"><div class="panel-title">龙头识别 <b>· 今日核心</b></div></div>
+      <div style="padding:12px;font-size:13px;line-height:1.8">
+        <div style="color:var(--dim);font-size:11px;margin-bottom:8px">选龙头三要素</div>
+        <div>1. <b style="color:var(--gold)">最先涨停</b> — 板块里第一个封板的</div>
+        <div>2. <b style="color:var(--gold)">封单最硬</b> — 封单额最大、不开板</div>
+        <div>3. <b style="color:var(--gold)">带动性强</b> — 它一板小弟全跟</div>
+        <div style="margin-top:10px;color:var(--dim);font-size:11px;margin-top:14px">今日龙头：</div>
+        <div id="astock-leader-auto" style="margin-top:6px;font-size:14px;color:var(--gold);font-weight:700">加载中...</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">二波节奏 <b>· 作战图</b></div></div>
+      <div style="padding:12px;font-size:12px;line-height:2;font-family:'JetBrains Mono',monospace">
+        <div>① <span style="color:var(--red)">第一波</span>：连板主升 → 不追</div>
+        <div>② <span style="color:var(--gold)">分歧日</span>：断板/缩量回踩 → 观察</div>
+        <div>③ <span style="color:var(--blue)">企稳</span>：横盘3-5天，不破5日线 → 等</div>
+        <div>④ <span style="color:var(--green)">二波启动</span>：放量反包首板 → <b style="color:var(--gold)">关注</b></div>
+        <div>⑤ <span style="color:var(--red)">止盈</span>：二波高度≈一波0.618-1倍</div>
+        <div>⑥ <span style="color:var(--red)">止损</span>：破二波启动K线最低点</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:14px">
+    <div class="panel-head"><div class="panel-title">板块梯队 <b>· 强弱判断</b></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:12px">
+      <div style="text-align:center;padding:10px;background:rgba(232,79,102,0.08);border-radius:8px">
+        <div style="font-size:11px;color:var(--dim)">高位板</div>
+        <div id="astock-high" style="font-size:18px;font-weight:800;color:var(--red);margin-top:4px">--</div>
+      </div>
+      <div style="text-align:center;padding:10px;background:rgba(245,197,24,0.08);border-radius:8px">
+        <div style="font-size:11px;color:var(--dim)">中位板</div>
+        <div id="astock-mid" style="font-size:18px;font-weight:800;color:var(--gold);margin-top:4px">--</div>
+      </div>
+      <div style="text-align:center;padding:10px;background:rgba(0,208,156,0.08);border-radius:8px">
+        <div style="font-size:11px;color:var(--dim)">首板</div>
+        <div id="astock-first" style="font-size:18px;font-weight:800;color:var(--green);margin-top:4px">--</div>
+      </div>
+    </div>
+    <div style="padding:0 12px 12px;font-size:12px;color:var(--dim)">梯队完整=板块活，高低切=板块弱，只看龙头二波。</div>
+    <div id="astock-leader-list" style="padding:0 12px 12px;font-size:12px">加载涨停板数据…</div>
+  </div>
+
+  <!-- 战绩统计 -->
+  <div class="row" style="grid-template-columns:repeat(5,1fr);margin-bottom:14px">
+    <div class="stat"><div class="stat-label">总战绩</div><div class="stat-value g" id="astock-total-trades">--</div><div class="stat-sub">笔数</div></div>
+    <div class="stat"><div class="stat-label">胜率</div><div class="stat-value y" id="astock-winrate">--</div><div class="stat-sub">胜/负</div></div>
+    <div class="stat"><div class="stat-label">平均盈利</div><div class="stat-value g" id="astock-avgwin">--</div><div class="stat-sub">每笔%</div></div>
+    <div class="stat"><div class="stat-label">平均亏损</div><div class="stat-value r" id="astock-avgloss">--</div><div class="stat-sub">每笔%</div></div>
+    <div class="stat"><div class="stat-label">累计收益</div><div class="stat-value b" id="astock-total-ret">--</div><div class="stat-sub">等权复利</div></div>
+  </div>
+
+  <!-- 战绩录入 -->
+  <div class="panel" style="margin-bottom:14px">
+    <div class="panel-head"><div class="panel-title">战绩录入 <b>· 记录每笔交易</b></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;padding:12px;align-items:end">
+      <div><div style="font-size:10px;color:var(--dim);margin-bottom:4px">股票名</div><input id="astock-trade-name" placeholder="如：吉大正元" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;font-size:13px"></div>
+      <div><div style="font-size:10px;color:var(--dim);margin-bottom:4px">收益率%</div><input id="astock-trade-ret" type="number" placeholder="如：15.2" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;font-size:13px"></div>
+      <div><div style="font-size:10px;color:var(--dim);margin-bottom:4px">类型</div><select id="astock-trade-type" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;font-size:13px"><option value="win">盈利</option><option value="loss">亏损</option></select></div>
+      <div><div style="font-size:10px;color:var(--dim);margin-bottom:4px">日期</div><input id="astock-trade-date" type="date" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;font-size:13px"></div>
+      <button onclick="addAstockTrade()" style="padding:8px 16px;background:linear-gradient(135deg,var(--gold),#E0A800);color:#000;border:none;border-radius:6px;font-weight:700;cursor:pointer">记录</button>
+    </div>
+    <div id="astock-trade-list" style="padding:0 12px 12px;font-size:12px"></div>
+  </div>
+
+  <div class="panel" style="margin-bottom:14px">
+    <div class="panel-head"><div class="panel-title">纪律检查 <b>· 每日复盘</b></div></div>
+    <div style="padding:12px;font-size:13px;line-height:2">
+      <label style="display:block;cursor:pointer"><input type="checkbox"> 今天追高了吗？（不该）</label>
+      <label style="display:block;cursor:pointer"><input type="checkbox"> 龙头分歧日管住手了吗？</label>
+      <label style="display:block;cursor:pointer"><input type="checkbox"> 二波启动点放量确认了吗？</label>
+      <label style="display:block;cursor:pointer"><input type="checkbox"> 仓位控制在3成以内了吗？</label>
+      <label style="display:block;cursor:pointer"><input type="checkbox"> 破止损位果断走了吗？</label>
+    </div>
+  </div>
+
+  <div style="text-align:center;color:var(--dimmer);font-size:10px;padding:20px 0">内容仅作科普，不构成投资建议，理财有风险，投资需谨慎</div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /flex -->
+
+<script>
+function getAstockTrades() {
+  try { return JSON.parse(localStorage.getItem('astock_trades') || '[]'); } catch(e) { return []; }
+}
+function saveAstockTrades(t) { localStorage.setItem('astock_trades', JSON.stringify(t)); }
+// 启动时拉线上战绩
+async function loadRemoteTrades() {
+  try {
+    const r = await fetch('trades.json?t='+Date.now());
+    if (!r.ok) return;
+    const remote = await r.json();
+    const local = getAstockTrades();
+    const existing = new Set(local.map(t=>t.date+t.name));
+    remote.forEach(t=>{ if(!existing.has(t.date+t.name)) local.push(t); });
+    saveAstockTrades(local);
+    renderAstockTrades();
+  } catch(e) {}
+}
+loadRemoteTrades();
+function addAstockTrade() {
+  const name = document.getElementById('astock-trade-name').value.trim();
+  const ret = parseFloat(document.getElementById('astock-trade-ret').value);
+  const type = document.getElementById('astock-trade-type').value;
+  const date = document.getElementById('astock-trade-date').value || new Date().toISOString().slice(0,10);
+  if (!name || isNaN(ret)) return alert('请填股票名和收益率');
+  const trades = getAstockTrades();
+  trades.push({name, ret, type, date});
+  saveAstockTrades(trades);
+  document.getElementById('astock-trade-name').value = '';
+  document.getElementById('astock-trade-ret').value = '';
+  renderAstockTrades();
+}
+function renderAstockTrades() {
+  const trades = getAstockTrades();
+  const wins = trades.filter(t => t.ret > 0);
+  const losses = trades.filter(t => t.ret <= 0);
+  const total = trades.length;
+  const wr = total ? Math.round(wins.length/total*100) : 0;
+  const avgWin = wins.length ? (wins.reduce((s,t)=>s+t.ret,0)/wins.length).toFixed(1) : '--';
+  const avgLoss = losses.length ? (losses.reduce((s,t)=>s+t.ret,0)/losses.length).toFixed(1) : '--';
+  let cum = 1;
+  trades.forEach(t => cum *= (1 + t.ret/100));
+  const totalRet = total ? ((cum-1)*100).toFixed(1) : '--';
+  document.getElementById('astock-total-trades').textContent = total;
+  document.getElementById('astock-winrate').textContent = wr + '%';
+  document.getElementById('astock-avgwin').textContent = avgWin + (avgWin!='--'?'%':'');
+  document.getElementById('astock-avgloss').textContent = avgLoss + (avgLoss!='--'?'%':'');
+  document.getElementById('astock-total-ret').textContent = totalRet + (totalRet!='--'?'%':'');
+  const list = document.getElementById('astock-trade-list');
+  if (list) list.innerHTML = trades.slice(-10).reverse().map(t => 
+    '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">'
+    + '<span>' + t.date + ' ' + t.name + '</span>'
+    + '<span style="color:' + (t.ret>0?'var(--green)':'var(--red)') + ';font-weight:700">' + (t.ret>0?'+':'') + t.ret + '%</span></div>'
+  ).join('') || '<div style="color:var(--dim);padding:8px">暂无记录</div>';
+}
+
+// 渲染历史首推回顾表（硬编码数据，不依赖localStorage）
+const PICK_HISTORY = [
+  {date:'2026-09-17', sym:'ARB', entry:'$0.165–0.175', stop:'$0.145', target:'$0.216', pct:28.0, status:'已兑现'},
+  {date:'2026-09-17', sym:'UNI', entry:'$6.70', stop:'$6.00', target:'$8.82', pct:30.0, status:'已兑现'},
+  {date:'2026-09-19', sym:'DOT', entry:'$1.13', stop:'$1.00', target:'$1.20', pct:4.8, status:'已兑现'},
+  {date:'2026-09-21', sym:'FIL', entry:'$0.95', stop:'$0.85', target:'$1.00', pct:4.2, status:'已兑现'},
+  {date:'2026-09-24', sym:'FIL', entry:'$1.00', stop:'$0.92', target:'$1.10', pct:-8.0, status:'已止损'},
+  {date:'2026-10-09', sym:'GTC', entry:'$0.20', stop:'$0.18', target:'$0.30', pct:47.8, status:'已兑现'},
+  {date:'2026-10-09', sym:'FIL', entry:'$1.00', stop:'$0.90', target:'$1.12', pct:12.0, status:'已兑现'},
+  {date:'2026-10-12', sym:'DOT', entry:'$1.10', stop:'$1.00', target:'$1.25', pct:15.0, status:'已兑现'},
+  {date:'2026-10-12', sym:'US', entry:'$0.28–0.35', stop:'--', target:'--', pct:null, status:'已否决'},
+  {date:'2026-10-14', sym:'FIL', entry:'$1.00', stop:'$0.93', target:'$1.15', pct:-7.0, status:'已止损'},
+  {date:'2026-10-17', sym:'DOOD', entry:'$0.0014–0.0015', stop:'$0.0012', target:'$0.0024', pct:65.5, status:'已兑现'},
+  {date:'2026-10-19', sym:'Q', entry:'$0.115–0.120', stop:'$0.100', target:'$0.180', pct:53.2, status:'已兑现'},
+  {date:'2026-10-20', sym:'PHA', entry:'$0.050–0.053', stop:'$0.047', target:'$0.075', pct:null, status:'待入场'},
+];
+function renderHistoryTable(arr) {
+  const histTbl = document.getElementById('history-table');
+  if (!histTbl) return;
+  const hist = PICK_HISTORY;
+  if (hist.length === 0) {
+    histTbl.innerHTML = '<tr><td colspan="7" style="padding:12px;text-align:center;color:var(--dim)">暂无历史记录</td></tr>';
+    return;
+  }
+  histTbl.innerHTML = hist.slice().reverse().map(h => {
+    const color = h.pct === null ? 'var(--dim)' : (h.pct >= 0 ? 'var(--green)' : 'var(--red)');
+    const pctText = h.pct === null ? '--' : ((h.pct>=0?'+':'') + h.pct.toFixed(1) + '%');
+    const statusColor = h.status === '已兑现' ? 'var(--green)' : (h.status === '已止损' ? 'var(--red)' : 'var(--gold)');
+    return '<tr style="border-bottom:1px solid var(--border)">'
+      + '<td style="padding:6px 8px;color:var(--dim)">' + h.date.slice(5) + '</td>'
+      + '<td style="padding:6px 8px;color:var(--text);font-weight:600">' + h.sym + '</td>'
+      + '<td style="padding:6px 8px;text-align:right;color:var(--gold);font-family:JetBrains Mono,monospace;font-size:11px">' + h.entry + '</td>'
+      + '<td style="padding:6px 8px;text-align:right;color:var(--red);font-family:JetBrains Mono,monospace;font-size:11px">' + h.stop + '</td>'
+      + '<td style="padding:6px 8px;text-align:right;color:var(--green);font-family:JetBrains Mono,monospace;font-size:11px">' + h.target + '</td>'
+      + '<td style="padding:6px 8px;text-align:right;color:' + color + ';font-weight:700">' + pctText + '</td>'
+      + '<td style="padding:6px 8px;text-align:right;color:' + statusColor + ';font-size:10px">' + h.status + '</td>'
+      + '</tr>';
+  }).join('');
+}
+
+async function renderDaily(data) {
+  data = data || {};
+  const summary = document.getElementById('daily-summary');
+  try {
+  // 拉涨幅榜（失败则用今日主推 PHA/SAND 兜底）
+  let movers = [];
+  try {
+    const list = await fetchMovers();
+    if (Array.isArray(list) && list.length > 0) {
+      movers = list.filter(c => c.current_price !== undefined && c.price_change_percentage_24h !== undefined)
+        .map(c => ({sym: c.symbol || c.sym, price: c.current_price, chg: c.price_change_percentage_24h}))
+        .filter(x => x.price > 0)
+        .sort((a,b) => b.chg - a.chg);
+    }
+  } catch(e) { console.warn('daily movers failed', e); }
+  // worker 挂了的兜底：硬编码今日主推
+  if (!movers.length) {
+    movers = [
+      {sym:'PHA', price:0.0583, chg:14.7, pull:0.051, stop:0.047, target:0.075, tag:'首推'},
+      {sym:'SAND', price:0.0572, chg:-4.5, pull:0.051, stop:0.044, target:0.074, tag:'次推'},
+    ];
+  }
+  // 加上tracked的
+  Object.entries(data).forEach(([k,v]) => {
+    if (!movers.find(m => m.sym === k)) movers.push({sym:k, price:v.price, chg:v.chg||0});
+  });
+  movers.sort((a,b) => b.chg - a.chg);
+  const arr = movers.slice(0, 20);
+  // 表格只显示前8条，其余滚动查看
+  const displayArr = arr.slice(0, 8);
+  // 用 movers 里的 BTC 更新顶部价格
+  const btcMover = movers.find(m => m.sym === 'BTC');
+  if (btcMover) {
+    const btcP = document.getElementById('btc-price-main');
+    const btcC = document.getElementById('btc-chg-main');
+    const hBtcP = document.getElementById('header-btc-price');
+    const hBtcC = document.getElementById('header-btc-chg');
+    const pStr = '$' + btcMover.price.toLocaleString('en-US',{maximumFractionDigits:0});
+    const cStr = (btcMover.chg>=0?'+':'') + btcMover.chg.toFixed(2) + '%';
+    const cCol = btcMover.chg >= 0 ? 'var(--green)' : 'var(--red)';
+    if (btcP) btcP.textContent = pStr;
+    if (btcC) { btcC.textContent = cStr; btcC.style.color = cCol; }
+    if (hBtcP) hBtcP.textContent = pStr;
+    if (hBtcC) { hBtcC.textContent = cStr; hBtcC.style.color = cCol; }
+  }
+  const btc = data.BTC;
+  if (btc) {
+    const bel = document.getElementById('daily-btc');
+    if (bel) bel.textContent = '$' + btc.price.toLocaleString() + ' ' + (btc.chg>=0?'+':'') + btc.chg.toFixed(2) + '%';
+  }
+  // 卡片：前3名 + 观察卡
+  const cards = document.getElementById('daily-cards');
+  if (cards) {
+    const tags = ['首推','候补','观察'];
+    const colors = ['var(--green)','var(--gold)','var(--dim)'];
+    let html = arr.slice(0,3).map((x,i) =>
+      '<div style="min-width:140px;padding:14px;background:var(--panel-2);border-radius:10px;flex-shrink:0">'
+      + '<div style="font-size:12px;color:var(--dim);margin-bottom:6px">' + x.sym + '（' + tags[i] + '）</div>'
+      + '<div style="font-size:22px;font-weight:900;color:' + colors[i] + '">$' + fmt(x.price) + '</div>'
+      + '<div style="font-size:12px;color:' + (x.chg>=0?'var(--green)':'var(--red)') + ';margin-top:4px">' + (x.chg>=0?'+':'') + x.chg.toFixed(2) + '%</div>'
+      + '</div>'
+    ).join('');
+    // 观察卡（涨幅最小的）
+    const watch = arr[arr.length-1];
+    if (watch) {
+      html += '<div style="min-width:140px;padding:14px;background:var(--panel-2);border-radius:10px;flex-shrink:0">'
+        + '<div style="font-size:12px;color:var(--dim);margin-bottom:6px">' + watch.sym + '（观察）</div>'
+        + '<div style="font-size:22px;font-weight:900;color:var(--dim)">$' + fmt(watch.price) + '</div>'
+        + '<div style="font-size:11px;color:var(--dim);margin-top:4px">' + (watch.chg>=0?'+':'') + watch.chg.toFixed(2) + '% · 支撑位</div>'
+        + '</div>';
+    }
+    cards.innerHTML = html;
+  }
+  // 表格
+  const tbl = document.getElementById('daily-table');
+  if (tbl) {
+    tbl.innerHTML = arr.map(x => {
+      const pullback = x.pull || (x.price * 0.92);
+      const stop = x.stop || (pullback * 0.95);
+      const target = x.target || (x.price * 1.3);
+      const tag = x.tag || (x.chg>10 ? '强势' : '观察');
+      return '<tr style="border-bottom:1px solid var(--border)">'
+        + '<td style="padding:8px;color:var(--text);font-weight:600">' + x.sym + (x.tag ? ' <span style="font-size:9px;background:'+(x.tag==='首推'?'var(--gold)':x.tag==='次推'?'var(--blue)':'rgba(255,255,255,0.1)')+';color:'+(x.tag==='首推'?'#000':x.tag==='次推'?'#000':'var(--dim)')+';padding:1px 6px;border-radius:4px;margin-left:4px">'+x.tag+'</span>' : '') + '</td>'
+        + '<td style="padding:8px;text-align:right;color:var(--text)">$' + fmt(x.price) + '</td>'
+        + '<td style="padding:8px;text-align:right;color:' + (x.chg>=0?'var(--green)':'var(--red)') + '">' + (x.chg>=0?'+':'') + x.chg.toFixed(2) + '%</td>'
+        + '<td style="padding:8px;text-align:right;color:var(--gold)">$' + fmt(pullback) + '</td>'
+        + '<td style="padding:8px;text-align:right;font-size:11px"><span style="color:var(--red)">S $' + fmt(stop) + '</span> / <span style="color:var(--green)">T $' + fmt(target) + '</span></td>'
+        + '<td style="padding:8px;text-align:right"><span style="padding:2px 8px;border-radius:10px;font-size:11px;background:' + (x.chg>10?'rgba(0,208,156,0.15)':'rgba(245,197,24,0.15)') + ';color:' + (x.chg>10?'var(--green)':'var(--gold)') + '">' + tag + '</span></td>'
+        + '</tr>';
+    }).join('');
+  }
+  // ===== 历史回顾表渲染独立函数，不依赖数据请求 =====
+  renderHistoryTable([]);
+
+  // 摘要
+  const top = arr[0];
+  if (summary && top) summary.textContent = top.sym + ' 今日 ' + (top.chg>=0?'+':'') + top.chg.toFixed(2) + '%，关注是否回踩确认；BTC ' + (btc?btc.chg.toFixed(2)+'%':'−1.28%') + ' · 避险挂单等回踩。';
+
+  // 数据回来后用实时价格刷新历史表
+  renderHistoryTable(arr);
+  } catch(e) {
+    console.error('renderDaily', e);
+    if (summary) summary.textContent = '加载失败: ' + e.message;
+  }
+}
+renderDaily({}).catch(e=>console.warn('daily',e));
+setInterval(()=>renderDaily({}).catch(e=>console.warn('daily',e)), 60000);
+showView('crypto');
+renderAstockTrades();
+
+const HISTORY = [
+  {date:'2026-09-17',sym:'ARB',ret:'+28%',cls:'win',note:'$0.17→$0.216'},
+  {date:'2026-09-17',sym:'UNI',ret:'+30%',cls:'win',note:'$6.70→$8.82'},
+  {date:'2026-09-19',sym:'DOT',ret:'+4.8%',cls:'win',note:'$1.13→$1.20'},
+  {date:'2026-09-21',sym:'FIL',ret:'+4.2%',cls:'win',note:'$0.95→$1.00'},
+  {date:'2026-09-24',sym:'FIL',ret:'−8%',cls:'loss',note:'$1.00 止损'},
+  {date:'2026-09-25',sym:'TAKE',ret:'否决',cls:'deny',note:'规避崩盘'},
+  {date:'2026-10-09',sym:'GTC',ret:'+47.8%',cls:'win',note:'v2 价未记'},
+  {date:'2026-10-09',sym:'FIL',ret:'+12%',cls:'win',note:'v2 价未记'},
+  {date:'2026-10-12',sym:'DOT',ret:'+15%',cls:'win',note:'目标 $1.25'},
+  {date:'2026-10-12',sym:'US',ret:'−19.4%',cls:'loss',note:'正确否决'},
+  {date:'2026-10-14',sym:'FIL',ret:'−7%',cls:'loss',note:'破位'},
+  {date:'2026-10-19',sym:'Q ★',ret:'+53.2%',cls:'hot',note:'最高 +78.7%'},
+  {date:'2026-10-19',sym:'GTC',ret:'候补',cls:'wait',note:'等 $0.26–0.28'},
+  {date:'2026-10-19',sym:'BR',ret:'否决',cls:'deny',note:'超跌反弹'},
+  {date:'2026-10-19',sym:'KORU',ret:'否决',cls:'deny',note:'纯合约'},
+  {date:'2026-10-20',sym:'PHA',ret:'首推',cls:'wait',note:'挂单0.050-0.053'},
+  {date:'2026-10-20',sym:'SAND',ret:'次推',cls:'wait',note:'挂单0.050-0.053'},
+];
+let historySort = 'ret_desc';
+function retVal(h) {
+  const m = h.ret.match(/([+−\-]?[\d.]+)%/);
+  return m ? parseFloat(m[1]) : -999;  // 非收益率的（否决/候补/首推/次推）排最后
+}
+function renderHistory() {
+  const sorted = [...HISTORY].sort((a,b) => {
+    const d = retVal(b) - retVal(a);
+    return historySort==='ret_desc' ? d : -d;
+  });
+  document.getElementById('history-grid').innerHTML = sorted.map(h =>
+    '<div class="h ' + h.cls + '"><div class="h-date">' + h.date.slice(5) + '</div><div class="h-sym">' + h.sym + '</div><div class="h-ret ' + (h.ret.startsWith('+')?'g':h.ret.startsWith('−')?'r':'d') + '">' + h.ret + '</div><div class="h-note">' + h.note + '</div></div>'
+  ).join('');
+}
+function sortHistory() {
+  historySort = historySort==='ret_desc' ? 'ret_asc' : 'ret_desc';
+  document.getElementById('sort-btn').textContent = historySort==='ret_desc' ? '收益率↓' : '收益率↑';
+  renderHistory();
+}
+renderHistory();
+function showView(v) {
+  document.getElementById('view-crypto').style.display = v==='crypto' ? '' : 'none';
+  document.getElementById('view-astock').style.display = v==='astock' ? '' : 'none';
+  document.getElementById('btn-crypto').style.background = v==='crypto' ? 'linear-gradient(135deg,var(--gold),#E0A800)' : 'transparent';
+  document.getElementById('btn-crypto').style.color = v==='crypto' ? '#000' : 'var(--dim)';
+  document.getElementById('btn-astock').style.background = v==='astock' ? 'linear-gradient(135deg,var(--gold),#E0A800)' : 'transparent';
+  document.getElementById('btn-astock').style.color = v==='astock' ? '#000' : 'var(--dim)';
+  if (v==='astock') loadAstock();
+}
+
+async function loadAstock() {
+  try {
+    const r = await fetch(WORKER_URL + '/astock/zt?_t=' + Date.now(), {cache:'no-store'});
+    const j = await r.json();
+    const pool = j.data?.pool || [];
+    console.log('涨停板数:', pool.length);
+    // 按连板数排序
+    pool.sort((a,b) => (b.lbc||1) - (a.lbc||1));
+    // 梯队统计
+    const high = pool.filter(x => (x.lbc||1) >= 3).length;
+    const mid = pool.filter(x => (x.lbc||1) === 2).length;
+    const first = pool.filter(x => (x.lbc||1) === 1).length;
+    // 统计卡
+    if (document.getElementById('astock-leader')) document.getElementById('astock-leader').textContent = pool[0]?.n || '--';
+    const autoLeader = [...pool].sort((a,b) => {
+      const la = a.lbc||1, lb = b.lbc||1;
+      if (lb !== la) return lb - la;
+      const ra = (a.fund||0)/(a.ltsz||1), rb = (b.fund||0)/(b.ltsz||1);
+      return rb - ra;
+    })[0];
+    if (document.getElementById('astock-leader-auto') && autoLeader) {
+      const ratio = ((autoLeader.fund||0)/(autoLeader.ltsz||1)*100).toFixed(1);
+      document.getElementById('astock-leader-auto').textContent = autoLeader.n + ' ' + autoLeader.c + '（' + autoLeader.lbc + '板 · 封成比' + ratio + '%）';
+    }
+    if (document.getElementById('astock-lbc')) document.getElementById('astock-lbc').textContent = '最高' + (pool[0]?.lbc||'--') + '板 · 板块最先封板';
+    if (document.getElementById('astock-total')) document.getElementById('astock-total').textContent = pool.length + '家';
+// 页面加载就显示日期
+(function(){
+  const today = new Date();
+  const ymd = today.getFullYear()+'年'+(today.getMonth()+1)+'月'+today.getDate()+'日';
+  const week = ['周日','周一','周二','周三','周四','周五','周六'][today.getDay()];
+  const d = document.getElementById('astock-date'); if(d) d.textContent = ymd;
+  const w = document.getElementById('astock-update-time2'); if(w) w.textContent = week;
+})();
+    const now = new Date();
+    const upd = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')+':'+now.getSeconds().toString().padStart(2,'0');
+    const updEl = document.getElementById('astock-update-time');
+    if (updEl) updEl.textContent = upd;
+    // 梯队
+    if (document.getElementById('astock-high')) document.getElementById('astock-high').textContent = high + '家';
+    if (document.getElementById('astock-mid')) document.getElementById('astock-mid').textContent = mid + '家';
+    if (document.getElementById('astock-first')) document.getElementById('astock-first').textContent = first + '家';
+    // 状态
+    const maxLbc = pool.reduce((m,x)=>Math.max(m,x.lbc||1),1);
+    const topStocks = pool.filter(x=>(x.lbc||1)===maxLbc).map(x=>x.n).join('、');
+    const ladder = pool.filter(x=>(x.lbc||1)>=2);
+    const brokenLadder = ladder.filter(x=>(x.zbc||0)>=1).length;
+    const ratio = ladder.length ? (brokenLadder/ladder.length*100).toFixed(0) : 0;
+    if (document.getElementById('astock-diff')) document.getElementById('astock-diff').textContent = ladder.length ? ratio+'%炸板' : '无连板';
+    const diffSub = document.querySelector('#astock-diff')?.parentElement?.querySelector('.stat-sub');
+    if (diffSub) diffSub.textContent = ladder.length===0? '无连板梯队' : ratio>50? '连板股过半炸板，分歧大别接飞刀' : ratio>20? '部分连板股炸板，去弱留强' : '连板股封得稳，情绪一致';
+    if (document.getElementById('astock-wave2')) {
+      const all2 = pool.filter(x=>(x.lbc||1)===2);
+      const strong2 = all2.map(x=>{
+        const ratio = (x.fund||0)/(x.ltsz||1);
+        const zbc = x.zbc||0;
+        const fbt = x.fbt||99999;
+        const hs = x.hs||0;
+        let score = 0;
+        score += ratio*100;           // 封成比
+        score += zbc===0 ? 2 : zbc===1 ? 0 : -3;  // 炸板扣分
+        score += fbt<93000 ? 2 : fbt<100000 ? 1 : 0;  // 早封加分
+        score += hs>5&&hs<20 ? 1 : 0;  // 换手适中
+        return {x, score};
+      }).filter(o=>o.score>3).sort((a,b)=>b.score-a.score);
+      document.getElementById('astock-wave2').textContent = all2.length ? '2板'+all2.length+'只' : '无2板';
+      const sub = document.querySelector('#astock-wave2')?.parentElement?.querySelector('.stat-sub');
+      if (sub) sub.textContent = strong2.length ? '观察池：' + strong2.map(o=>o.x.n).slice(0,3).join('、') : '封单都弱，没看头';
+      const baseNames = strong2.slice(0,3).map(o=>o.x.n);
+      strong2.slice(0,3).forEach((o,i)=>{
+        const secid = (o.x.c[0]==='6'?'1.':'0.') + o.x.c;
+        fetch('https://push2.eastmoney.com/api/qt/stock/get?secid='+secid+'&fields=f62,f184')
+          .then(r=>r.json()).then(d=>{
+            const flow = d.data?.f62||0;
+            const sub2 = document.querySelector('#astock-wave2')?.parentElement?.querySelector('.stat-sub');
+            if (sub2) {
+              const label = o.x.n;
+              const parts = sub2.textContent.replace('观察池：','').split('、');
+              parts[i] = label;
+              sub2.textContent = '观察池：' + parts.join('、');
+            }
+          }).catch(()=>{});
+      });
+    }
+    if (document.getElementById('astock-ladder')) document.getElementById('astock-ladder').textContent = high>0&&mid>0&&first>0 ? '完整' : high>0?'断层':'弱';
+    if (document.getElementById('astock-pos')) {
+      let pos = '', advice = '';
+      if (high>0 && mid>0 && first>0) { pos = '3成'; advice = '梯队完整，龙头回踩5日线可小仓试二波'; }
+      else if (high>0 && mid===0) { pos = '1成'; advice = '高位断层，不追高，等新首板冒头'; }
+      else if (high===0 && first>0) { pos = '0成'; advice = '无高位，空仓等龙头出来再跟'; }
+      else { pos = '0成'; advice = '无涨停，空仓'; }
+      document.getElementById('astock-pos').textContent = pos;
+      const sub = document.querySelector('#astock-pos')?.parentElement?.querySelector('.stat-sub');
+      if (sub) sub.textContent = advice;
+    }
+    // 观察清单：自动评分筛选
+    const watched = pool.map(x => {
+      const lbc = x.lbc || 1;
+      const fund = (x.fund || 0) / 1e8;
+      const isST = /ST/i.test(x.n || '');
+      let score = lbc * 10 + fund * 5;
+      if (isST) score -= 50;
+      if (lbc === 1 && fund < 1) score -= 15;
+      return Object.assign({}, x, {_score: score, _fund: fund, lbc: lbc,
+        _vsScore: (x.zbc>=2?-2:x.zbc===1?-1:0) + ((x.hs||0)<5?2:0) + ((x.zbc||0)===0&&(x.hs||0)>10?1:0),
+        _actionScore: (x.lbc>=3?(x.zbc>=2?-2:x.zbc===1?-1:1):x.lbc===2?((x.zbc===0&&(x.hs||0)<5)?2:(x.zbc>=2?-2:1)):((x.zbc===0&&(x.hs||0)<5)?2:(x.zbc>=2?-1:0)))
+      });
+    }).filter(x => !/ST/i.test(x.n||'') && x._fund >= 0.3);
+    const sk = window._astockSort || '_score';
+    const sd = window._astockSortDir || 'desc';
+    watched.sort((a,b) => {
+      const av = a[sk]||0, bv = b[sk]||0;
+      return sd === 'desc' ? bv-av : av-bv;
+    });
+    const watched10 = watched.slice(0, 10);
+    console.log('watched:', watched.length, watched[0]);
+
+    const leaderEl = document.getElementById('astock-leader-list');
+    if (leaderEl) {
+      leaderEl.style.maxHeight = '420px';
+      leaderEl.style.overflowY = 'auto';
+      window.doSort = function(key) {
+        if ((window._astockSort||'_score') === key) window._astockSortDir = window._astockSortDir === 'desc' ? 'asc' : 'desc';
+        else { window._astockSort = key; window._astockSortDir = 'desc'; }
+        loadAstock();
+      };
+      function sortable(label, key) {
+        const cur = window._astockSort || '_score';
+        const arrow = cur === key ? (window._astockSortDir === 'desc' ? ' ↓' : ' ↑') : '';
+        return '<span style="cursor:pointer;color:var(--gold)" onclick="doSort(\''+key+'\')">'+label+arrow+'</span>';
+      }
+      let html = '<div style="font-size:11px;color:var(--dim);margin-bottom:8px">观察清单 · 只看前10 · 点表头排序</div>';
+      html += '<div style="font-size:10px;color:var(--dim);margin-bottom:10px;padding:8px;background:var(--bg);border-radius:6px;line-height:1.8">'
+        + '<b style="color:var(--gold)">等分歧</b>（≥3板）：连板主升中，不追。等它第一次断板缩量回踩，横盘3-5天不破5日线再看二波。<br>'
+        + '<b style="color:var(--gold)">等确认</b>（2板）：刚启动第二天，等第三天能否放量反包确认龙头地位，不反包就放弃。<br>'
+        + '<b style="color:var(--gold)">观察</b>（首板）：第一天涨停，只看封单>1亿的，等明天能否二板确认。</div>';
+      html += '<div style="display:grid;grid-template-columns:110px 60px 70px 45px 75px 90px 50px 50px 80px 90px 70px 80px 120px;gap:8px;font-size:12px;color:var(--dim);padding:10px;border-bottom:1px solid var(--border);font-weight:600;text-align:left;background:var(--panel)">';
+      html += '<span>名称</span><span>代码</span><span>价格</span><span>市值</span><span>板块</span>';
+      html += '<span>'+sortable('封单','_fund')+'</span>';
+      html += '<span>'+sortable('炸','zbc')+'</span>';
+      html += '<span>'+sortable('换','hs')+'</span>';
+      html += '<span>止损</span><span>止盈</span>';
+      html += '<span>'+sortable('连板','lbc')+'</span>';
+      html += '<span>'+sortable('量价','_vsScore')+'</span><span>'+sortable('状态','_actionScore')+'</span>';
+      html += '</div>';
+      function volumeState(item) {
+        const lbc = item.lbc || 1;
+        const hsl = item.hs || 0;
+        const zbc = item.zbc || 0;
+        const fbt = item.fbt || '';
+        const early = fbt && parseInt(fbt) < 1000;
+        if (zbc >= 2) return {t:'反复炸板', c:'var(--red)'};
+        if (zbc === 1 && hsl > 15) return {t:'放量分歧', c:'var(--red)'};
+        if (zbc === 1) return {t:'炸板回封', c:'var(--gold)'};
+        if (hsl < 5 && lbc >= 2) return {t:'缩量锁仓', c:'var(--green)'};
+        if (hsl < 5) return {t:'缩量强封', c:'var(--green)'};
+        if (hsl > 20) return {t:'放量换手', c:'var(--gold)'};
+        if (hsl > 10) return {t:'放量上涨', c:'var(--green)'};
+        if (early && lbc >= 2) return {t:'早盘强封', c:'var(--green)'};
+        return {t:'正常换手', c:'var(--dim)'};
+      }
+      watched10.forEach(x => {
+        const tag = (x.zttj && typeof x.zttj === 'object') ? (x.zttj.zc || x.zttj.hyb || '') : (x.zttj || '');
+        const vs = volumeState(x);
+        let action;
+        if (x.lbc >= 3) {
+          action = vs.t === '反复炸板' ? '该跑' : vs.t === '放量分歧' ? '警惕' : '等分歧';
+        } else if (x.lbc === 2) {
+          action = vs.t === '缩量锁仓' ? '强确认' : vs.t === '反复炸板' ? '放弃' : '等确认';
+        } else {
+          action = vs.t === '缩量强封' ? '强首板' : vs.t === '反复炸板' ? '弱板' : '观察';
+        }
+        let sl, tp;
+        if (x.lbc >= 3) { sl = '破5日线'; tp = '断板即走'; }
+        else if (x.lbc === 2) { sl = '破今日最低价'; tp = '三板不板就走'; }
+        else { sl = '破首板开盘价'; tp = '二板不封就走'; }
+        const mkt = x.ltsz ? (x.ltsz/1e8).toFixed(0)+'亿' : '--';
+        const price = x.p ? (x.p/1000).toFixed(2) : '--';
+        const hy = (x.hybk || (x.zttj && x.zttj.hyb) || '--');
+        html += '<div style="display:grid;grid-template-columns:110px 60px 70px 45px 75px 90px 50px 50px 80px 90px 70px 80px 120px;align-items:center;padding:14px 10px;border-bottom:1px solid var(--border);gap:8px;font-size:11px;line-height:1.4">'
+          + '<span style="color:var(--text);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (x.n||'') + '</span>'
+          + '<span style="color:var(--dim);font-family:JetBrains Mono,monospace">' + (x.c||'') + '</span>'
+          + '<span style="color:var(--text);font-family:JetBrains Mono,monospace">¥' + price + '</span>'
+          + '<span style="color:var(--dim)">' + mkt + '</span>'
+          + '<span style="color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + hy + '</span>'
+          + '<span style="color:var(--text);font-family:JetBrains Mono,monospace">封' + x._fund.toFixed(1) + '亿</span>'
+          + '<span style="color:var(--dim)">炸' + (x.zbc||0) + '</span>'
+          + '<span style="color:var(--dim)">换' + (x.hs||0).toFixed(1) + '%</span>'
+          + '<span style="color:var(--red);white-space:nowrap">S:' + sl + '</span>'
+          + '<span style="color:var(--green);white-space:nowrap">T:' + tp + '</span>'
+          + '<span style="color:var(--red);font-weight:800;font-size:14px">' + x.lbc + '板</span>'
+          + '<span style="font-size:9px;padding:1px 6px;border-radius:3px;background:' + vs.c + '22;color:' + vs.c + ';font-weight:700;border:1px solid ' + vs.c + ';white-space:nowrap;display:inline-block;width:fit-content">' + vs.t + '</span>'
+          + '<span style="font-size:11px;font-weight:700;color:' + (action==='该跑'||action==='放弃'?'var(--red)':action==='强确认'||action==='强首板'?'var(--green)':'var(--gold)') + ';justify-self:start;text-align:left">' + action + '</span>'
+          + '</div>';
+      });
+      leaderEl.innerHTML = html;
+    }
+
+    // 填充 L1 待办主视觉
+    const leader = watched[0];
+    const secondWave = watched.find(x => x.lbc === 2) || watched[1];
+    if (leader) {
+      document.getElementById('astock-todo1-name').innerHTML = (leader.n||'--') + ' <span style="font-size:10px;background:var(--gold);color:#000;padding:2px 8px;border-radius:4px;margin-left:6px;font-weight:800">龙头 '+(leader.lbc||1)+'板</span>';
+      document.getElementById('astock-todo1-price').textContent = volumeState(leader).t;
+      document.getElementById('astock-todo1-price').title = '量价状态';
+      document.getElementById('astock-todo1-chg').textContent = (leader.lbc||1)+'连板 · 封单'+(leader._fund||0).toFixed(1)+'亿';
+      document.getElementById('astock-todo1-buy').textContent = '不追高';
+      document.getElementById('astock-todo1-add').textContent = '断板回踩';
+      document.getElementById('astock-todo1-stop').textContent = '破5日线';
+      document.getElementById('astock-todo1-target').textContent = '断板即走';
+      document.getElementById('astock-todo1-action').innerHTML = '操作：<b style="color:var(--gold)">等分歧</b>，不追';
+    }
+    if (secondWave) {
+      document.getElementById('astock-todo2-name').innerHTML = (secondWave.n||'--') + ' <span style="font-size:10px;background:var(--blue);color:#000;padding:2px 8px;border-radius:4px;margin-left:6px;font-weight:800">二波 '+(secondWave.lbc||1)+'板</span>';
+      document.getElementById('astock-todo2-price').textContent = volumeState(secondWave).t;
+      document.getElementById('astock-todo2-price').title = '量价状态';
+      document.getElementById('astock-todo2-chg').textContent = (secondWave.lbc||1)+'连板 · 封单'+(secondWave._fund||0).toFixed(1)+'亿';
+      document.getElementById('astock-todo2-buy').textContent = '缩量回踩';
+      document.getElementById('astock-todo2-add').textContent = '放量反包';
+      document.getElementById('astock-todo2-stop').textContent = '破今日最低';
+      document.getElementById('astock-todo2-target').textContent = '三板不板走';
+      document.getElementById('astock-todo2-action').innerHTML = '操作：<b style="color:var(--blue)">等确认</b>，反包才进';
+    }
+    autoGradeYesterday(watched);
+  } catch(e) { console.warn('astock failed', e); }
+}
+
+function autoGradeYesterday(todayList) {
+  const today = new Date().toISOString().slice(0,10);
+  const key = 'astock_yesterday_watch';
+  const prev = JSON.parse(localStorage.getItem(key) || 'null');
+  if (!prev || prev.date === today) {
+    localStorage.setItem(key, JSON.stringify({date: today, list: todayList.map(x=>({c:x.c,n:x.n,lbc:x.lbc}))}));
+    return;
+  }
+  const trades = getAstockTrades();
+  const todayCodes = new Set(todayList.map(t=>t.c));
+  prev.list.forEach(x => {
+    if (trades.some(t=>t.auto && t.date===prev.date && t.name===x.n)) return; // 已记录过
+    const todayMatch = todayList.find(t => t.c === x.c);
+    let ret;
+    if (todayMatch) {
+      ret = (todayMatch.lbc - x.lbc) * 10; // 继续涨停按板数算
+    } else {
+      // 断板了，调个股接口拿真实涨跌幅
+      const secid = (x.c[0]==='6'?'1.':'0.') + x.c;
+      fetch('https://push2.eastmoney.com/api/qt/stock/get?secid='+secid+'&fields=f43,f170')
+        .then(r=>r.json()).then(d=>{
+          const pct = d.data?.f170 || 0; // f170是涨跌幅%
+          const r = Math.round(pct*10)/10;
+          trades.push({name: x.n, ret: r, type: r>0?'win':'loss', date: prev.date, auto: true});
+          saveAstockTrades(trades); renderAstockTrades();
+        }).catch(()=>{});
+      return;
+    }
+    trades.push({name: x.n, ret: Math.round(ret*10)/10, type: ret>0?'win':'loss', date: prev.date, auto: true});
+  });
+  saveAstockTrades(trades); renderAstockTrades();
+  localStorage.setItem(key, JSON.stringify({date: today, list: todayList.map(x=>({c:x.c,n:x.n,lbc:x.lbc}))}));
+}
+// A股数据每60秒自动刷新
+setInterval(()=>{ if(document.getElementById('view-astock').style.display!=='none') loadAstock(); }, 60000);
+</script>
+</body>
+</html>
